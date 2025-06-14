@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd } from 'react-icons/fa';
+import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd, FaUtensils, FaHandsHelping } from 'react-icons/fa';
 
 interface FormData {
   name: string;
@@ -29,6 +29,8 @@ const serviceOptions = [
   "Antar Barang",
   "Belanjain",
   "Titip Beli",
+  "Antar Makanan",
+  "Helper",
   "Custom Request",
 ];
 
@@ -121,26 +123,36 @@ export default function Home() {
         Mau kemana? Mau nitip? Mau belanja? Mau nyuruh?<br />
         Yuk, <span className="">Pesan CUSS Sekarang!</span>
       </h1>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 min-w-[180px] flex flex-col items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center mb-8 max-w-4xl mx-auto">
+        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
           <FaMotorcycle className="text-orange-500 text-3xl mb-2" />
           <span className="block text-orange-500 font-bold text-lg mb-1">Ojek</span>
-          <span className="text-black/70 text-sm">Antar jemput cepat & nyaman</span>
+          <span className="text-black/70 text-sm text-center">Antar jemput cepat & nyaman</span>
         </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 min-w-[180px] flex flex-col items-center">
+        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
           <FaBoxOpen className="text-orange-500 text-3xl mb-2" />
           <span className="block text-orange-500 font-bold text-lg mb-1">Barang</span>
-          <span className="text-black/70 text-sm">Kirim & ambil barang mudah</span>
+          <span className="text-black/70 text-sm text-center">Kirim & ambil barang mudah</span>
         </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 min-w-[180px] flex flex-col items-center">
+        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
           <FaShoppingCart className="text-orange-500 text-3xl mb-2" />
           <span className="block text-orange-500 font-bold text-lg mb-1">Belanja</span>
-          <span className="text-black/70 text-sm">Bantu belanja keperluanmu</span>
+          <span className="text-black/70 text-sm text-center">Bantu belanja keperluanmu</span>
         </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 min-w-[180px] flex flex-col items-center">
+        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
           <FaHandHoldingUsd className="text-orange-500 text-3xl mb-2" />
           <span className="block text-orange-500 font-bold text-lg mb-1">Titip/Beliin</span>
-          <span className="text-black/70 text-sm">Titip atau minta dibeliin apa aja</span>
+          <span className="text-black/70 text-sm text-center">Titip atau minta dibeliin apa aja</span>
+        </div>
+        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
+          <FaUtensils className="text-orange-500 text-3xl mb-2" />
+          <span className="block text-orange-500 font-bold text-lg mb-1">Makanan</span>
+          <span className="text-black/70 text-sm text-center">Antar makanan atau pesan makanan favoritmu</span>
+        </div>
+        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
+          <FaHandsHelping className="text-orange-500 text-3xl mb-2" />
+          <span className="block text-orange-500 font-bold text-lg mb-1">Helper</span>
+          <span className="text-black/70 text-sm text-center">Butuh bantuan harian? Serahkan pada kami</span>
         </div>
       </div>
       <button
@@ -153,10 +165,10 @@ export default function Home() {
 
       {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div ref={modalRef} className="bg-white w-full max-w-md mx-2 rounded-xl shadow-lg p-6 relative animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div ref={modalRef} className="bg-white w-full max-w-md mx-auto rounded-xl shadow-lg p-4 sm:p-6 relative animate-fade-in max-h-[90vh] overflow-y-auto">
             <button
-              className="absolute top-2 right-2 text-black text-2xl font-bold hover:text-orange-500 focus:outline-none"
+              className="absolute top-2 right-2 text-black text-2xl font-bold hover:text-orange-500 focus:outline-none z-10"
               onClick={() => setModalOpen(false)}
               aria-label="Close"
             >

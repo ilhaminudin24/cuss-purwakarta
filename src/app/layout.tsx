@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
-import Image from "next/image";
+import Navigation from "./components/Navigation";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,27 +21,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-white text-black relative`}>
-        {/* Sticky Navbar */}
-        <nav className="sticky top-0 z-30 bg-white border-b border-orange-100 flex items-center justify-between px-4 sm:px-8 py-2 shadow-sm">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="CUSS Purwakarta Logo" width={120} height={120} priority />
-          </Link>
-          <div className="hidden md:flex gap-6 text-base font-medium">
-            <Link href="/" className="text-black">Beranda</Link>
-            <Link href="/services" className="text-black">Layanan</Link>
-            <Link href="/how-to-order" className="text-black">Cara Pesan</Link>
-            <Link href="/testimonials" className="text-black">Testimoni</Link>
-            <Link href="/faq" className="text-black">FAQ</Link>
-            <Link href="/about" className="text-black">Tentang</Link>
-            <Link href="/contact" className="text-black">Kontak</Link>
-          </div>
-        </nav>
+        <Navigation />
+        
         {/* Main Content */}
         <main className="min-h-[80vh] bg-white">{children}</main>
+
         {/* Footer */}
         <footer className="bg-black text-white text-center py-4 mt-8">
           <span className="text-sm">&copy; {new Date().getFullYear()} CUSS Purwakarta. All rights reserved.</span>
         </footer>
+
         {/* Floating WhatsApp CTA (mobile) */}
         <a
           href="https://wa.me/6287858860846?text=Yuk%20CUSS%20sekarang!%20Saya%20mau%20pesan%20layanan."
@@ -53,7 +41,7 @@ export default function RootLayout({
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75 1.7 0 3.29-.425 4.68-1.17l3.82 1.02-1.02-3.82A9.708 9.708 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12z" />
           </svg>
-          CUSS Sekarang
+          Hubungi CS Kami
         </a>
       </body>
     </html>

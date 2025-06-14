@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: 'Bisa nego harga?',
-    a: 'Bisa dong! Silahkan mengisi form. Nanti kamu langsung diajak ngobrol dulu di WhatsApp buat nego. Kalau pilih “Nggak”, langsung lanjut order sesuai tarif.'
+    a: 'Tentu bisa! Silakan isi formulir yang tersedia. Kami akan menghubungi Kamu melalui WhatsApp untuk berdiskusi mengenai harga. Jika Kamu memilih opsi “Tidak”, maka pemesanan akan langsung diproses sesuai tarif yang berlaku.'
   },
   {
     q: 'Ada langganan mingguan?',
@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: 'Bagaimana cara pesan?',
-    a: 'Isi form di website, lalu klik WhatsApp untuk booking.'
+    a: 'Cukup isi formulir pemesanan di website kami, lalu klik tombol WhatsApp untuk melanjutkan proses booking dengan tim kami.'
   },
 ];
 
