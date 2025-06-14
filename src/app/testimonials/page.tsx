@@ -24,7 +24,7 @@ export default function TestimonialsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {testimonials.map((t, i) => (
           <div key={i} className="bg-orange-500/10 border border-orange-200 rounded-xl p-6 shadow-sm flex flex-col gap-2">
-            <p className="text-black/80 text-base mb-2">"{t.text}"</p>
+            <p className="text-black/80 text-base mb-2">&ldquo;{t.text}&rdquo;</p>
             <span className="text-orange-500 font-bold text-sm">- {t.name}</span>
           </div>
         ))}

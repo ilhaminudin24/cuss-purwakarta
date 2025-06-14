@@ -1,8 +1,28 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd } from 'react-icons/fa';
+
+interface FormData {
+  name: string;
+  phone: string;
+  service: string;
+  pickup: string;
+  destination: string;
+  time: string;
+  notes: string;
+  negotiate: string;
+  payment: string;
+}
+
+interface FormErrors {
+  name?: string;
+  phone?: string;
+  service?: string;
+  pickup?: string;
+  destination?: string;
+  payment?: string;
+}
 
 const serviceOptions = [
   "Ojek Penumpang",
@@ -14,7 +34,7 @@ const serviceOptions = [
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormData>({
     name: "",
     phone: "",
     service: serviceOptions[0],
@@ -25,7 +45,7 @@ export default function Home() {
     negotiate: "No",
     payment: "Tunai",
   });
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const modalRef = useRef<HTMLDivElement>(null);
   const [showDateTime, setShowDateTime] = useState(false);
   const [dateTime, setDateTime] = useState("");
@@ -49,7 +69,7 @@ export default function Home() {
 
   // Validation
   function validate() {
-    const newErrors: any = {};
+    const newErrors: FormErrors = {};
     if (!form.name.trim()) newErrors.name = "Nama wajib diisi";
     if (!form.phone.trim()) newErrors.phone = "Nomor WA wajib diisi";
     else if (!/^\d{10,}$/.test(form.phone.trim())) newErrors.phone = "Nomor WA harus angka & minimal 10 digit";
@@ -60,16 +80,16 @@ export default function Home() {
     return newErrors;
   }
 
-  function handleChange(e: any) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
-    setForm((prev: any) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
     if (name === "time") {
       setShowDateTime(value === "Choose a time");
       if (value !== "Choose a time") setDateTime("");
     }
   }
 
-  function handleSubmit(e: any) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const validation = validate();
     setErrors(validation);

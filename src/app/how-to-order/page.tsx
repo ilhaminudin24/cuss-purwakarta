@@ -1,4 +1,4 @@
-import { FaWhatsapp, FaClipboardList, FaMapMarkerAlt, FaCheckCircle, FaShoppingCart, FaRegEdit, FaPaperPlane, FaComments } from 'react-icons/fa';
+import { FaShoppingCart, FaRegEdit, FaPaperPlane, FaComments } from 'react-icons/fa';
 
 const steps = [
   {
