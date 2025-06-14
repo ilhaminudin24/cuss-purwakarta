@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black relative`}>
+      <body className={`${inter.variable} font-sans antialiased bg-white text-black relative`}>
         {/* Sticky Navbar */}
         <nav className="sticky top-0 z-30 bg-white border-b border-orange-100 flex items-center justify-between px-4 sm:px-8 py-2 shadow-sm">
           <Link href="/" className="flex items-center gap-2">
