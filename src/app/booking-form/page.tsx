@@ -16,10 +16,14 @@ export default function BookingFormPage() {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target;
+    const target = e.target;
+    const value = target.type === 'checkbox' 
+      ? (target as HTMLInputElement).checked 
+      : target.value;
+    
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [target.name]: value,
     }));
   };
 
