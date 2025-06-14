@@ -22,6 +22,7 @@ interface FormErrors {
   pickup?: string;
   destination?: string;
   payment?: string;
+  time?: string;
 }
 
 const serviceOptions = [
@@ -121,9 +122,9 @@ export default function Home() {
       <Image src="/logo.png" alt="CUSS Purwakarta Logo" width={320} height={320} className="mx-auto" />
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-black mb-2 leading-tight">
         Mau kemana? Mau nitip? Mau belanja? Mau nyuruh?<br />
-        Yuk, <span className="">Pesan CUSS Sekarang!</span>
+        Yuk, <span className="text-orange-500">Pesan CUSS Sekarang!</span>
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center mb-8 max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 justify-items-center mb-8 max-w-4xl mx-auto">
         <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
           <FaMotorcycle className="text-orange-500 text-3xl mb-2" />
           <span className="block text-orange-500 font-bold text-lg mb-1">Ojek</span>
@@ -202,15 +203,17 @@ export default function Home() {
                 {errors.phone && <span className="text-red-500 text-xs">{errors.phone}</span>}
               </div>
               <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Jenis Layanan <span className="text-red-500">*</span></label>
+                <label className="block font-medium mb-1 text-black">Layanan <span className="text-red-500">*</span></label>
                 <select
                   name="service"
                   className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.service ? "border-red-500" : "border-orange-300"}`}
                   value={form.service}
                   onChange={handleChange}
                 >
-                  {serviceOptions.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                  {serviceOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
                 {errors.service && <span className="text-red-500 text-xs">{errors.service}</span>}
@@ -240,10 +243,10 @@ export default function Home() {
                 {errors.destination && <span className="text-red-500 text-xs">{errors.destination}</span>}
               </div>
               <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Waktu Penjemputan</label>
+                <label className="block font-medium mb-1 text-black">Waktu <span className="text-red-500">*</span></label>
                 <select
                   name="time"
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 border-orange-300"
+                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.time ? "border-red-500" : "border-orange-300"}`}
                   value={form.time}
                   onChange={handleChange}
                 >
@@ -253,12 +256,33 @@ export default function Home() {
                 {showDateTime && (
                   <input
                     type="datetime-local"
-                    className="w-full border rounded px-3 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-orange-400 border-orange-300"
+                    className="w-full border rounded px-3 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                     value={dateTime}
-                    onChange={e => setDateTime(e.target.value)}
-                    required={form.time === "Choose a time"}
+                    onChange={(e) => setDateTime(e.target.value)}
                   />
                 )}
+              </div>
+              <div className="text-left">
+                <label className="block font-medium mb-1 text-black">Catatan</label>
+                <textarea
+                  name="notes"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  value={form.notes}
+                  onChange={handleChange}
+                  rows={3}
+                />
+              </div>
+              <div className="text-left">
+                <label className="block font-medium mb-1 text-black">Negosiasi Harga</label>
+                <select
+                  name="negotiate"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  value={form.negotiate}
+                  onChange={handleChange}
+                >
+                  <option value="No">Tidak</option>
+                  <option value="Yes">Ya</option>
+                </select>
               </div>
               <div className="text-left">
                 <label className="block font-medium mb-1 text-black">Metode Pembayaran <span className="text-red-500">*</span></label>
@@ -270,49 +294,14 @@ export default function Home() {
                 >
                   <option value="Tunai">Tunai</option>
                   <option value="Transfer">Transfer</option>
-                  <option value="QRIS">QRIS</option>
                 </select>
                 {errors.payment && <span className="text-red-500 text-xs">{errors.payment}</span>}
               </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Catatan Tambahan</label>
-                <textarea
-                  name="notes"
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 border-orange-300"
-                  value={form.notes}
-                  onChange={handleChange}
-                  rows={2}
-                  placeholder="Opsional"
-                />
-              </div>
-              <div className="text-left flex items-center gap-3">
-                <span className="font-medium text-black">Nego Harga?</span>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="negotiate"
-                    value="Yes"
-                    checked={form.negotiate === "Yes"}
-                    onChange={handleChange}
-                  />
-                  <span className="text-black">Ya</span>
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="negotiate"
-                    value="No"
-                    checked={form.negotiate === "No"}
-                    onChange={handleChange}
-                  />
-                  <span className="text-black">Tidak</span>
-                </label>
-              </div>
               <button
                 type="submit"
-                className="mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg px-6 py-3 rounded-full shadow-lg text-center transition-colors"
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition-colors"
               >
-                Kirim Ke WhatsApp
+                Kirim Pesanan
               </button>
             </form>
           </div>
