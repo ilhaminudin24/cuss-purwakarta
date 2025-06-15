@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd, FaUtensils, FaHandsHelping } from 'react-icons/fa';
-import useSWR from 'swr';
+import useSWR from "swr";
 
 interface Service {
   id: string;
@@ -20,11 +20,21 @@ const iconMap: { [key: string]: any } = {
   'FaHandsHelping': FaHandsHelping,
 };
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(url, {
+  cache: 'no-store',
+  headers: {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  }
+}).then((res) => res.json());
 
 export default function ServicesSection() {
   const { data: services, error, isLoading } = useSWR<Service[]>('/api/services', fetcher, {
     refreshInterval: 5000, // Refresh every 5 seconds
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 0, // Disable deduping
+    keepPreviousData: false // Don't keep previous data
   });
 
   if (isLoading) {
