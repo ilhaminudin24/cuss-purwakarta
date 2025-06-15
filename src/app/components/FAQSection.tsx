@@ -9,16 +9,23 @@ interface FAQ {
   answer: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => fetch(url, {
+  cache: 'no-store',
+  headers: {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  }
+}).then((res) => res.json());
 
 export default function FAQSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const { data: faqs, error, isLoading } = useSWR<FAQ[]>('/api/faqs', fetcher, {
     refreshInterval: 5000, // Refresh every 5 seconds
     revalidateOnFocus: false,
-    revalidateOnReconnect: false
+    revalidateOnReconnect: false,
+    dedupingInterval: 0, // Disable deduping
+    keepPreviousData: false // Don't keep previous data
   });
-
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   if (isLoading) {
     return (
