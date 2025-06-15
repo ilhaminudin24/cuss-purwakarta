@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import useSWR from "swr";
 
 interface MenuItem {
@@ -22,13 +23,18 @@ const fetcher = (url: string) => fetch(url, {
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { data: menuItems, error, isLoading } = useSWR<MenuItem[]>('/api/navigation', fetcher, {
+  const { data: menuItems, error, isLoading, mutate } = useSWR<MenuItem[]>('/api/navigation', fetcher, {
     refreshInterval: 5000, // Refresh every 5 seconds
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
     dedupingInterval: 0, // Disable deduping
     keepPreviousData: false // Don't keep previous data
   });
+
+  // Force a revalidation when the component mounts
+  useEffect(() => {
+    mutate();
+  }, [mutate]);
 
   if (isLoading) {
     return (

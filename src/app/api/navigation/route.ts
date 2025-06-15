@@ -5,12 +5,24 @@ export const revalidate = 0; // Disable caching
 
 export async function GET() {
   try {
+    // Force fresh data from MongoDB using Prisma's native options
     const menuItems = await prisma.navigationMenu.findMany({
       where: {
         isVisible: true,
       },
       orderBy: {
         order: "asc",
+      },
+      // Use Prisma's native options to bypass cache
+      skip: 0,
+      take: 100,
+      // Force a new query each time
+      select: {
+        id: true,
+        title: true,
+        path: true,
+        order: true,
+        isVisible: true,
       },
     });
 
