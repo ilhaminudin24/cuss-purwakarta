@@ -70,16 +70,17 @@ export default function Navigation() {
   return (
     <nav className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-orange-500">
-                CUSS Purwakarta
-              </Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+        <div className="relative flex items-center h-16">
+          {/* Logo on the left */}
+          <div className="absolute left-0 flex items-center h-full">
+            <Link href="/" className="text-xl font-bold text-orange-500">
+              CUSS Purwakarta
+            </Link>
+          </div>
+          {/* Centered menu */}
+          <div className="flex-1 flex justify-center">
+            <div className="hidden sm:flex sm:space-x-8">
               {validMenuItems.map((item) => {
-                // Ensure path starts with a forward slash
                 const path = item.path.startsWith('/') ? item.path : `/${item.path}`;
                 return (
                   <Link

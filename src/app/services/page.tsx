@@ -60,7 +60,7 @@ export default function ServicesPage() {
               {IconComponent && <IconComponent className="text-orange-500 text-3xl mb-2" />}
               <h3 className="font-bold text-lg text-orange-500 mb-1">{service.title}</h3>
               <p className="text-black/70 text-sm">{service.description}</p>
-            </div>
+          </div>
           );
         })}
       </div>
