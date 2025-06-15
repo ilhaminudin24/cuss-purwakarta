@@ -9,6 +9,7 @@ interface Service {
   title: string;
   description: string;
   icon: string;
+  position: number;
 }
 
 const iconMap: { [key: string]: any } = {
@@ -53,11 +54,14 @@ export default function ServicesSection() {
     );
   }
 
+  // Sort services by position if not already sorted by the API
+  const sortedServices = services?.slice().sort((a, b) => a.position - b.position);
+
   return (
     <section className="max-w-4xl mx-auto py-12 px-4">
       <h2 className="text-2xl sm:text-3xl font-bold text-orange-500 mb-8 text-center">Layanan Kami</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
-        {services?.map((service: Service) => {
+        {sortedServices?.map((service: Service) => {
           const IconComponent = iconMap[service.icon] || FaMotorcycle;
           return (
             <div key={service.id} className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center text-center shadow-sm">
