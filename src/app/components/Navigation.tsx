@@ -53,14 +53,16 @@ export default function Navigation() {
     );
   }
 
-  if (error) {
+  if (error || !menuItems) {
     return (
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-red-500">Error loading menu</span>
+                <Link href="/" className="text-xl font-bold text-orange-500">
+                  CUSS Purwakarta
+                </Link>
               </div>
             </div>
           </div>
@@ -80,10 +82,10 @@ export default function Navigation() {
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {menuItems?.map((item) => (
+              {menuItems.map((item) => (
                 <Link
                   key={item.id}
-                  href={item.url}
+                  href={item.url || '/'}
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
                     pathname === item.url
                       ? "border-orange-500 text-orange-500"
@@ -117,10 +119,10 @@ export default function Navigation() {
       {isOpen && (
         <div className="sm:hidden">
           <div className="pt-2 pb-3 space-y-1">
-            {menuItems?.map((item) => (
+            {menuItems.map((item) => (
               <Link
                 key={item.id}
-                href={item.url}
+                href={item.url || '/'}
                 className={`${
                   pathname === item.url
                     ? "bg-orange-50 border-orange-500 text-orange-700"

@@ -41,34 +41,39 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
+          return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email
+            }
+          });
+
+          if (!user || !user?.password) {
+            return null;
           }
-        });
 
-        if (!user || !user?.password) {
-          throw new Error("Invalid credentials");
+          const isCorrectPassword = await compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isCorrectPassword) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email || "",
+            name: user.name || "",
+            role: "admin", // Since this is an admin-only app
+          };
+        } catch (error) {
+          console.error("Auth error:", error);
+          return null;
         }
-
-        const isCorrectPassword = await compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isCorrectPassword) {
-          throw new Error("Invalid credentials");
-        }
-
-        return {
-          id: user.id,
-          email: user.email || "",
-          name: user.name || "",
-          role: "admin", // Since this is an admin-only app
-        };
       }
     })
   ],
