@@ -27,10 +27,13 @@ export async function DELETE(
       },
     });
 
+    // Update positions sequentially
     for (let i = 0; i < remainingServices.length; i++) {
       await prisma.service.update({
         where: { id: remainingServices[i].id },
-        data: { position: i },
+        data: {
+          position: i,
+        },
       });
     }
 
@@ -67,7 +70,7 @@ export async function PUT(
         title,
         description,
         icon,
-        position: position || 0,
+        position: typeof position === 'number' ? position : 0,
       },
     });
 
