@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FaPlus, FaEdit, FaTrash, FaArrowUp, FaArrowDown } from "react-icons/fa";
 
@@ -24,7 +23,6 @@ interface FormData {
 }
 
 export default function BookingFormFieldsPage() {
-  const router = useRouter();
   const { data: session } = useSession();
   const [fields, setFields] = useState<BookingFormField[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
