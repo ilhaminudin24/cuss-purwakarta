@@ -1,57 +1,43 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import useSWR from "swr";
 import Image from "next/image";
 import ServicesSection from "./components/ServicesSection";
 
-interface FormData {
+interface BookingFormField {
+  id: string;
+  label: string;
   name: string;
-  phone: string;
-  service: string;
-  pickup: string;
-  destination: string;
-  time: string;
-  notes: string;
-  negotiate: string;
-  payment: string;
+  type: string;
+  required: boolean;
+  position: number;
+  options?: string[];
+  isActive: boolean;
 }
 
-interface FormErrors {
-  name?: string;
-  phone?: string;
-  service?: string;
-  pickup?: string;
-  destination?: string;
-  payment?: string;
-  time?: string;
-}
-
-const serviceOptions = [
-  "Ojek Penumpang",
-  "Antar Barang",
-  "Belanjain",
-  "Titip Beli",
-  "Antar Makanan",
-  "Helper",
-  "Custom Request",
-];
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState<FormData>({
-    name: "",
-    phone: "",
-    service: serviceOptions[0],
-    pickup: "",
-    destination: "",
-    time: "Now",
-    notes: "",
-    negotiate: "No",
-    payment: "Tunai",
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
   const modalRef = useRef<HTMLDivElement>(null);
-  const [showDateTime, setShowDateTime] = useState(false);
-  const [dateTime, setDateTime] = useState("");
+  const [form, setForm] = useState<Record<string, any>>({});
+  const { data: fields = [] } = useSWR<BookingFormField[]>(
+    "/api/admin/booking-form-fields",
+    fetcher,
+    { refreshInterval: 5000 }
+  );
+
+  // Set default values when fields change
+  useEffect(() => {
+    if (!fields.length) return;
+    const defaults: Record<string, any> = {};
+    fields.forEach(f => {
+      if (f.type === "checkbox") defaults[f.name] = false;
+      else if (f.type === "select" && f.options?.length) defaults[f.name] = f.options[0];
+      else defaults[f.name] = "";
+    });
+    setForm(defaults);
+  }, [fields, modalOpen]);
 
   // Close modal on outside click
   useEffect(() => {
@@ -70,52 +56,48 @@ export default function Home() {
     };
   }, [modalOpen]);
 
-  // Validation
-  function validate() {
-    const newErrors: FormErrors = {};
-    if (!form.name.trim()) newErrors.name = "Nama wajib diisi";
-    if (!form.phone.trim()) newErrors.phone = "Nomor WA wajib diisi";
-    else if (!/^\d{10,}$/.test(form.phone.trim())) newErrors.phone = "Nomor WA harus angka & minimal 10 digit";
-    if (!form.service) newErrors.service = "Pilih layanan";
-    if (!form.pickup.trim()) newErrors.pickup = "Alamat jemput wajib diisi";
-    if (!form.destination.trim()) newErrors.destination = "Alamat tujuan wajib diisi";
-    if (!form.payment) newErrors.payment = "Pilih metode pembayaran";
-    return newErrors;
-  }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const target = e.target;
+    const value = target.type === 'checkbox' 
+      ? (target as HTMLInputElement).checked 
+      : target.value;
+    setForm((prev) => ({
+      ...prev,
+      [target.name]: value,
+    }));
+  };
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (name === "time") {
-      setShowDateTime(value === "Choose a time");
-      if (value !== "Choose a time") setDateTime("");
-    }
-  }
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const validation = validate();
-    setErrors(validation);
-    if (Object.keys(validation).length === 0) {
-      // Compose WhatsApp message
-      const waktu = form.time === "Choose a time" && dateTime
-        ? new Date(dateTime).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })
-        : form.time;
-      const msg =
-        `Halo CUSS Purwakarta 👋\n` +
-        `Saya ingin pesan layanan: ${form.service}\n` +
-        `Nama: ${form.name}\n` +
-        `No WA: ${form.phone}\n` +
-        `Dari: ${form.pickup}\n` +
-        `Ke: ${form.destination}\n` +
-        `Waktu: ${waktu}\n` +
-        `Metode Pembayaran: ${form.payment}\n` +
-        `Catatan: ${form.notes || "-"}\n` +
-        `Negosiasi Harga: ${form.negotiate}`;
-      const url = `https://wa.me/6287858860846?text=${encodeURIComponent(msg)}`;
-      window.location.href = url;
+    
+    // Validate required fields
+    const missingFields = fields
+      .filter(field => field.required && !form[field.name])
+      .map(field => field.label);
+    
+    if (missingFields.length > 0) {
+      alert(`Mohon lengkapi field berikut:\n${missingFields.join('\n')}`);
+      return;
     }
-  }
+
+    // Format WhatsApp message
+    const message = [
+      'Halo CUSS Purwakarta! 👋',
+      'Saya ingin memesan layanan:',
+      '',
+      ...fields.map(field => {
+        const value = form[field.name];
+        if (field.type === 'checkbox') {
+          return `${field.label}: ${value ? 'Ya' : 'Tidak'}`;
+        }
+        return `${field.label}: ${value || '-'}`;
+      })
+    ].join('\n');
+
+    const whatsappText = encodeURIComponent(message);
+    const waLink = `https://wa.me/6287858860846?text=${whatsappText}`;
+    window.open(waLink, '_blank');
+  };
 
   return (
     <section className="flex flex-col items-center justify-center min-h-[70vh] px-4 py-12 text-center gap-8 bg-white">
@@ -124,9 +106,7 @@ export default function Home() {
         Mau kemana? Mau nitip? Mau belanja? Mau nyuruh?<br />
         Yuk, <span className="text-orange-500">Pesan CUSS Sekarang!</span>
       </h1>
-      
       <ServicesSection />
-
       <button
         onClick={() => setModalOpen(true)}
         className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-lg transition-colors mb-2 animate-bounce"
@@ -134,7 +114,6 @@ export default function Home() {
         CUSS Sekarang
       </button>
       <span className="text-black/60 text-sm">Khusus area Purwakarta • Harga mulai Rp 9.000</span>
-
       {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -148,127 +127,81 @@ export default function Home() {
             </button>
             <h2 className="text-xl font-bold text-orange-500 mb-4 text-center">Formulir Pesanan</h2>
             <form className="flex flex-col gap-3 text-black" onSubmit={handleSubmit}>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Nama Lengkap <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="name"
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.name ? "border-red-500" : "border-orange-300"}`}
-                  value={form.name}
-                  onChange={handleChange}
-                  autoComplete="off"
-                />
-                {errors.name && <span className="text-red-500 text-xs">{errors.name}</span>}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">No. WhatsApp Aktif <span className="text-red-500">*</span></label>
-                <input
-                  type="tel"
-                  name="phone"
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.phone ? "border-red-500" : "border-orange-300"}`}
-                  value={form.phone}
-                  onChange={handleChange}
-                  autoComplete="off"
-                  inputMode="numeric"
-                />
-                {errors.phone && <span className="text-red-500 text-xs">{errors.phone}</span>}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Layanan <span className="text-red-500">*</span></label>
-                <select
-                  name="service"
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.service ? "border-red-500" : "border-orange-300"}`}
-                  value={form.service}
-                  onChange={handleChange}
-                >
-                  {serviceOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                {errors.service && <span className="text-red-500 text-xs">{errors.service}</span>}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Alamat Jemput <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="pickup"
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.pickup ? "border-red-500" : "border-orange-300"}`}
-                  value={form.pickup}
-                  onChange={handleChange}
-                  autoComplete="off"
-                />
-                {errors.pickup && <span className="text-red-500 text-xs">{errors.pickup}</span>}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Alamat Tujuan <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="destination"
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.destination ? "border-red-500" : "border-orange-300"}`}
-                  value={form.destination}
-                  onChange={handleChange}
-                  autoComplete="off"
-                />
-                {errors.destination && <span className="text-red-500 text-xs">{errors.destination}</span>}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Waktu <span className="text-red-500">*</span></label>
-                <select
-                  name="time"
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.time ? "border-red-500" : "border-orange-300"}`}
-                  value={form.time}
-                  onChange={handleChange}
-                >
-                  <option value="Now">Sekarang</option>
-                  <option value="Choose a time">Pilih Waktu</option>
-                </select>
-                {showDateTime && (
-                  <input
-                    type="datetime-local"
-                    value={dateTime}
-                    onChange={(e) => setDateTime(e.target.value)}
-                    className="mt-2 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 border-orange-300"
-                  />
-                )}
-                {errors.time && <span className="text-red-500 text-xs">{errors.time}</span>}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Metode Pembayaran <span className="text-red-500">*</span></label>
-                <select
-                  name="payment"
-                  className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.payment ? "border-red-500" : "border-orange-300"}`}
-                  value={form.payment}
-                  onChange={handleChange}
-                >
-                  <option value="Tunai">Tunai</option>
-                  <option value="Transfer">Transfer</option>
-                </select>
-                {errors.payment && <span className="text-red-500 text-xs">{errors.payment}</span>}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Catatan</label>
-                <textarea
-                  name="notes"
-                  className="w-full border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  value={form.notes}
-                  onChange={handleChange}
-                  rows={2}
-                />
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Negosiasi Harga</label>
-                <select
-                  name="negotiate"
-                  className="w-full border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  value={form.negotiate}
-                  onChange={handleChange}
-                >
-                  <option value="No">Tidak</option>
-                  <option value="Yes">Ya</option>
-                </select>
-              </div>
+              {fields.map(field => {
+                if (field.type === "textarea") {
+                  return (
+                    <div key={field.id} className="text-left">
+                      <label className="block font-medium mb-1 text-black">
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <textarea
+                        className="w-full border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        name={field.name}
+                        placeholder={field.label}
+                        value={form[field.name] ?? ""}
+                        onChange={handleChange}
+                        rows={3}
+                        required={field.required}
+                      />
+                    </div>
+                  );
+                }
+                if (field.type === "select") {
+                  return (
+                    <div key={field.id} className="text-left">
+                      <label className="block font-medium mb-1 text-black">
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <select
+                        className="w-full border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        name={field.name}
+                        value={form[field.name] ?? (field.options?.[0] ?? "")}
+                        onChange={handleChange}
+                        required={field.required}
+                      >
+                        {field.options?.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+                if (field.type === "checkbox") {
+                  return (
+                    <label key={field.id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name={field.name}
+                        checked={!!form[field.name]}
+                        onChange={handleChange}
+                        required={field.required}
+                      />
+                      {field.label}
+                      {field.required && <span className="text-red-500">*</span>}
+                    </label>
+                  );
+                }
+                // text or number
+                return (
+                  <div key={field.id} className="text-left">
+                    <label className="block font-medium mb-1 text-black">
+                      {field.label}
+                      {field.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      className="w-full border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      type={field.type}
+                      name={field.name}
+                      placeholder={field.label}
+                      value={form[field.name] ?? ""}
+                      onChange={handleChange}
+                      required={field.required}
+                    />
+                  </div>
+                );
+              })}
               <button
                 type="submit"
                 className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 transition-colors"
