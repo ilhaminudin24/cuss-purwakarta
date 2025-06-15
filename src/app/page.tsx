@@ -11,7 +11,6 @@ interface FormData {
   destination: string;
   time: string;
   notes: string;
-  negotiate: string;
   payment: string;
 }
 
@@ -31,7 +30,7 @@ const serviceOptions = [
   "Titip Beli",
   "Antar Makanan",
   "Helper",
-  "Custom Request",
+  "Lainnya",
 ];
 
 export default function Home() {
@@ -44,7 +43,6 @@ export default function Home() {
     destination: "",
     time: "Now",
     notes: "",
-    negotiate: "No",
     payment: "Tunai",
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -109,8 +107,7 @@ export default function Home() {
         `Ke: ${form.destination}\n` +
         `Waktu: ${waktu}\n` +
         `Metode Pembayaran: ${form.payment}\n` +
-        `Catatan: ${form.notes || "-"}\n` +
-        `Negosiasi Harga: ${form.negotiate}`;
+        `Catatan: ${form.notes || "-"}`;
       const url = `https://wa.me/6287858860846?text=${encodeURIComponent(msg)}`;
       window.location.href = url;
     }
@@ -121,7 +118,7 @@ export default function Home() {
       <Image src="/logo.png" alt="CUSS Purwakarta Logo" width={320} height={320} className="mx-auto" />
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-black mb-2 leading-tight">
         Mau kemana? Mau nitip? Mau belanja? Mau nyuruh?<br />
-        Yuk, <span className="">Pesan CUSS Sekarang!</span>
+        Yuk, <span className="">pesan CUSS sekarang!</span>
       </h1>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center mb-8 max-w-4xl mx-auto">
         <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
@@ -284,29 +281,6 @@ export default function Home() {
                   rows={2}
                   placeholder="Opsional"
                 />
-              </div>
-              <div className="text-left flex items-center gap-3">
-                <span className="font-medium text-black">Nego Harga?</span>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="negotiate"
-                    value="Yes"
-                    checked={form.negotiate === "Yes"}
-                    onChange={handleChange}
-                  />
-                  <span className="text-black">Ya</span>
-                </label>
-                <label className="flex items-center gap-1">
-                  <input
-                    type="radio"
-                    name="negotiate"
-                    value="No"
-                    checked={form.negotiate === "No"}
-                    onChange={handleChange}
-                  />
-                  <span className="text-black">Tidak</span>
-                </label>
               </div>
               <button
                 type="submit"
