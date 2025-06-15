@@ -1,7 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
+import useSWR from 'swr';
 
 interface MenuItem {
   id: string;
@@ -11,92 +14,109 @@ interface MenuItem {
   isVisible: boolean;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function Navigation() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const { data: menuItems, error, isLoading } = useSWR<MenuItem[]>('/api/navigation', fetcher, {
+    refreshInterval: 5000, // Refresh every 5 seconds
+  });
 
-  useEffect(() => {
-    fetchMenuItems();
-  }, []);
-
-  const fetchMenuItems = async () => {
-    try {
-      const response = await fetch("/api/navigation");
-      if (!response.ok) throw new Error("Failed to fetch menu items");
-      const data = await response.json();
-      setMenuItems(data);
-    } catch (error) {
-      console.error("Error fetching menu items:", error);
-      // Fallback to default menu items if the API fails
-      setMenuItems([
-        { id: "1", title: "Beranda", path: "/", order: 1, isVisible: true },
-        { id: "2", title: "Layanan", path: "/services", order: 2, isVisible: true },
-        { id: "3", title: "Cara Pesan", path: "/how-to-order", order: 3, isVisible: true },
-        { id: "4", title: "Testimoni", path: "/testimonials", order: 4, isVisible: true },
-        { id: "5", title: "FAQ", path: "/faq", order: 5, isVisible: true },
-        { id: "6", title: "Tentang", path: "/about", order: 6, isVisible: true },
-        { id: "7", title: "Kontak", path: "/contact", order: 7, isVisible: true },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
   };
 
-  return (
-    <>
-      {/* Sticky Navbar */}
-      <nav className="sticky top-0 z-30 bg-white border-b border-orange-100 flex items-center justify-between px-4 sm:px-8 py-2 shadow-sm">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="CUSS Purwakarta Logo" width={120} height={120} priority />
-        </Link>
-        
-        {/* Desktop Menu */}
-        <div className="hidden md:flex gap-6 text-base font-medium">
-          {!isLoading && menuItems.map((item) => (
-            <Link 
-              key={item.id} 
-              href={item.path} 
-              className="text-black hover:text-orange-500 transition-colors"
-            >
-              {item.title}
-            </Link>
-          ))}
+  if (isLoading) {
+    return (
+      <nav className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-xl font-bold text-gray-900">
+                Loading...
+              </Link>
+            </div>
+          </div>
         </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden p-2 text-black hover:text-orange-500 focus:outline-none"
-          aria-label="Toggle menu"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
-            {isMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            )}
-          </svg>
-        </button>
       </nav>
+    );
+  }
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-20 bg-white pt-16">
-          <div className="flex flex-col items-center gap-4 p-4">
-            {!isLoading && menuItems.map((item) => (
+  if (error) {
+    return (
+      <nav className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-xl font-bold text-gray-900">
+                Error loading menu
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  return (
+    <nav className="bg-white shadow">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link href="/" className="text-xl font-bold text-gray-900">
+              CUSS Purwakarta
+            </Link>
+          </div>
+
+          {/* Desktop menu */}
+          <div className="hidden sm:flex sm:items-center sm:space-x-8">
+            {menuItems?.map((item: MenuItem) => (
               <Link
                 key={item.id}
                 href={item.path}
-                className="text-black hover:text-orange-500 transition-colors text-lg font-medium w-full text-center py-2"
-                onClick={() => setIsMenuOpen(false)}
+                className={`${
+                  pathname === item.path
+                    ? "text-orange-500"
+                    : "text-gray-500 hover:text-gray-900"
+                } px-3 py-2 text-sm font-medium`}
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="sm:hidden flex items-center">
+            <button
+              onClick={toggleMenu}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-orange-500"
+            >
+              <span className="sr-only">Open main menu</span>
+              {isOpen ? (
+                <X className="block h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="block h-6 w-6" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {isOpen && (
+        <div className="sm:hidden">
+          <div className="pt-2 pb-3 space-y-1">
+            {menuItems?.map((item: MenuItem) => (
+              <Link
+                key={item.id}
+                href={item.path}
+                className={`${
+                  pathname === item.path
+                    ? "bg-orange-50 border-orange-500 text-orange-700"
+                    : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
+                } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+                onClick={() => setIsOpen(false)}
               >
                 {item.title}
               </Link>
@@ -104,6 +124,6 @@ export default function Navigation() {
           </div>
         </div>
       )}
-    </>
+    </nav>
   );
 } 
