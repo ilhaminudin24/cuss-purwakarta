@@ -1,41 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd, FaUtensils, FaHandsHelping, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 
 interface Service {
   id: string;
-  icon: string;
   title: string;
   description: string;
   position: number;
+  isActive: boolean;
 }
 
-const iconOptions = [
-  { value: 'FaMotorcycle', label: 'Motorcycle', icon: FaMotorcycle },
-  { value: 'FaBoxOpen', label: 'Box', icon: FaBoxOpen },
-  { value: 'FaShoppingCart', label: 'Shopping Cart', icon: FaShoppingCart },
-  { value: 'FaHandHoldingUsd', label: 'Money', icon: FaHandHoldingUsd },
-  { value: 'FaUtensils', label: 'Utensils', icon: FaUtensils },
-  { value: 'FaHandsHelping', label: 'Helping Hands', icon: FaHandsHelping },
-];
-
 export default function ServicesPage() {
-  const router = useRouter();
-  const { data: session } = useSession();
   const [services, setServices] = useState<Service[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    icon: "",
-    position: 0,
-  });
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentServiceId, setCurrentServiceId] = useState<string | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [formData, setFormData] = useState({ title: "", description: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,36 +42,31 @@ export default function ServicesPage() {
     setError(null);
 
     try {
-      const url = isEditing
-        ? `/api/admin/services/${currentServiceId}`
-        : "/api/admin/services";
+      const url = editingService ? `/api/admin/services/${editingService.id}` : "/api/admin/services";
       
       const response = await fetch(url, {
-        method: isEditing ? "PUT" : "POST",
+        method: editingService ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error(isEditing ? "Failed to update service" : "Failed to create service");
+      if (!response.ok) throw new Error(editingService ? "Failed to update service" : "Failed to create service");
 
       await fetchServices();
       handleCloseModal();
     } catch (error) {
-      setError(isEditing ? "Error updating service" : "Error creating service");
+      setError(editingService ? "Error updating service" : "Error creating service");
       console.error(error);
     }
   };
 
   const handleEdit = (service: Service) => {
-    setIsEditing(true);
-    setCurrentServiceId(service.id);
+    setEditingService(service);
     setFormData({
-      icon: service.icon,
       title: service.title,
       description: service.description,
-      position: service.position,
     });
     setIsModalOpen(true);
   };
@@ -171,9 +146,8 @@ export default function ServicesPage() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setIsEditing(false);
-    setCurrentServiceId(null);
-    setFormData({ icon: "", title: "", description: "", position: 0 });
+    setEditingService(null);
+    setFormData({ title: "", description: "" });
   };
 
   if (isLoading) {
@@ -220,12 +194,6 @@ export default function ServicesPage() {
                         scope="col"
                         className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                       >
-                        Icon
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                      >
                         Title
                       </th>
                       <th
@@ -244,7 +212,6 @@ export default function ServicesPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {services.map((service) => {
-                      const IconComponent = iconOptions.find(opt => opt.value === service.icon)?.icon;
                       return (
                         <tr key={service.id}>
                           <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
@@ -273,9 +240,6 @@ export default function ServicesPage() {
                                 <FaArrowDown className="w-4 h-4" />
                               </button>
                             </div>
-                          </td>
-                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                            {IconComponent && <IconComponent className="text-indigo-500 text-2xl" />}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {service.title}
@@ -330,31 +294,9 @@ export default function ServicesPage() {
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                     <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
-                      {isEditing ? "Edit Service" : "Add New Service"}
+                      {editingService ? "Edit Service" : "Add New Service"}
                     </h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Icon
-                        </label>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                          {iconOptions.map((option) => (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() => setFormData({ ...formData, icon: option.value })}
-                              className={`p-2 rounded-lg border ${
-                                formData.icon === option.value
-                                  ? "border-indigo-500 bg-indigo-50"
-                                  : "border-gray-300 hover:border-indigo-300"
-                              }`}
-                            >
-                              <option.icon className="w-6 h-6 mx-auto" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
                       <div>
                         <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                           Title
@@ -383,27 +325,12 @@ export default function ServicesPage() {
                         />
                       </div>
 
-                      <div>
-                        <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
-                          Position
-                        </label>
-                        <input
-                          type="number"
-                          id="position"
-                          value={formData.position}
-                          onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) })}
-                          min="0"
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                          required
-                        />
-                      </div>
-
                       <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                         <button
                           type="submit"
                           className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto"
                         >
-                          {isEditing ? "Update" : "Create"}
+                          {editingService ? "Update" : "Create"}
                         </button>
                         <button
                           type="button"

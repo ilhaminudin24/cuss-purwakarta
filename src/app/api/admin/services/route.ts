@@ -10,22 +10,6 @@ interface CreateData {
   position?: number;
 }
 
-// Function to initialize positions for existing services
-async function initializePositions() {
-  const services = await prisma.service.findMany({
-    orderBy: { createdAt: "asc" },
-  });
-
-  for (let i = 0; i < services.length; i++) {
-    await prisma.service.update({
-      where: { id: services[i].id },
-      data: {
-        position: i,
-      },
-    });
-  }
-}
-
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);

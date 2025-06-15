@@ -1,26 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 
 interface FAQ {
   id: string;
   question: string;
   answer: string;
+  position: number;
 }
 
 export default function FAQsPage() {
-  const { data: session } = useSession();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    question: "",
-    answer: "",
-  });
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentFaqId, setCurrentFaqId] = useState<string | null>(null);
+  const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
+  const [formData, setFormData] = useState({ question: "", answer: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,10 +38,8 @@ export default function FAQsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = isEditing
-        ? `/api/admin/faqs/${currentFaqId}`
-        : "/api/admin/faqs";
-      const method = isEditing ? "PUT" : "POST";
+      const url = editingFaq ? `/api/admin/faqs/${editingFaq.id}` : "/api/admin/faqs";
+      const method = editingFaq ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -71,8 +63,7 @@ export default function FAQsPage() {
       question: faq.question,
       answer: faq.answer,
     });
-    setCurrentFaqId(faq.id);
-    setIsEditing(true);
+    setEditingFaq(faq);
     setIsModalOpen(true);
   };
 
@@ -94,8 +85,7 @@ export default function FAQsPage() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setIsEditing(false);
-    setCurrentFaqId(null);
+    setEditingFaq(null);
     setFormData({
       question: "",
       answer: "",
@@ -177,7 +167,7 @@ export default function FAQsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
             <h2 className="text-xl font-bold mb-4">
-              {isEditing ? "Edit FAQ" : "Add New FAQ"}
+              {editingFaq ? "Edit FAQ" : "Add New FAQ"}
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -228,7 +218,7 @@ export default function FAQsPage() {
                   type="submit"
                   className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
-                  {isEditing ? "Update" : "Create"}
+                  {editingFaq ? "Update" : "Create"}
                 </button>
               </div>
             </form>

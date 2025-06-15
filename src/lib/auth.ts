@@ -2,8 +2,6 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import { prisma } from "@/lib/prisma";
-import { JWT } from "next-auth/jwt";
-import { Session } from "next-auth";
 
 // Extend the built-in session types
 declare module "next-auth" {
