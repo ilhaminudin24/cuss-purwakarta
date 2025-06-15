@@ -20,14 +20,13 @@ export async function DELETE(
       },
     });
 
-    // Reorder remaining services
+    // Update positions of remaining services
     const remainingServices = await prisma.service.findMany({
       orderBy: {
-        position: 'asc',
+        createdAt: 'asc',
       },
     });
 
-    // Update positions sequentially
     for (let i = 0; i < remainingServices.length; i++) {
       await prisma.service.update({
         where: { id: remainingServices[i].id },
@@ -54,54 +53,10 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { icon, title, description, position } = body;
+    const { title, description, icon, position } = body;
 
-    if (!icon || !title || !description) {
+    if (!title || !description || !icon) {
       return new NextResponse("Missing required fields", { status: 400 });
-    }
-
-    // If position is being updated, we need to handle the reordering
-    if (typeof position === 'number') {
-      const currentService = await prisma.service.findUnique({
-        where: { id: params.id },
-      });
-
-      if (!currentService) {
-        return new NextResponse("Service not found", { status: 404 });
-      }
-
-      // If moving up (position decreasing)
-      if (position < currentService.position) {
-        await prisma.service.updateMany({
-          where: {
-            position: {
-              gte: position,
-              lt: currentService.position,
-            },
-          },
-          data: {
-            position: {
-              increment: 1,
-            },
-          },
-        });
-      }
-      // If moving down (position increasing)
-      else if (position > currentService.position) {
-        await prisma.service.updateMany({
-          where: {
-            position: {
-              gt: currentService.position,
-              lte: position,
-            },
-          },
-          data: {
-            position: {
-              decrement: 1,
-            },
-          },
-        });
-      }
     }
 
     const service = await prisma.service.update({
@@ -109,16 +64,16 @@ export async function PUT(
         id: params.id,
       },
       data: {
-        icon,
         title,
         description,
-        ...(typeof position === 'number' && { position }),
+        icon,
+        position: position || 0,
       },
     });
 
     return NextResponse.json(service);
   } catch (error) {
-    console.error("[SERVICE_PUT]", error);
+    console.error("[SERVICE_UPDATE]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 } 
