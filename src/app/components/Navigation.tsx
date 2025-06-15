@@ -1,20 +1,47 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+interface MenuItem {
+  id: string;
+  title: string;
+  path: string;
+  order: number;
+  isVisible: boolean;
+}
+
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const menuItems = [
-    { href: "/", label: "Beranda" },
-    { href: "/services", label: "Layanan" },
-    { href: "/how-to-order", label: "Cara Pesan" },
-    { href: "/testimonials", label: "Testimoni" },
-    { href: "/faq", label: "FAQ" },
-    { href: "/about", label: "Tentang" },
-    { href: "/contact", label: "Kontak" },
-  ];
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
+
+  const fetchMenuItems = async () => {
+    try {
+      const response = await fetch("/api/navigation");
+      if (!response.ok) throw new Error("Failed to fetch menu items");
+      const data = await response.json();
+      setMenuItems(data);
+    } catch (error) {
+      console.error("Error fetching menu items:", error);
+      // Fallback to default menu items if the API fails
+      setMenuItems([
+        { id: "1", title: "Beranda", path: "/", order: 1, isVisible: true },
+        { id: "2", title: "Layanan", path: "/services", order: 2, isVisible: true },
+        { id: "3", title: "Cara Pesan", path: "/how-to-order", order: 3, isVisible: true },
+        { id: "4", title: "Testimoni", path: "/testimonials", order: 4, isVisible: true },
+        { id: "5", title: "FAQ", path: "/faq", order: 5, isVisible: true },
+        { id: "6", title: "Tentang", path: "/about", order: 6, isVisible: true },
+        { id: "7", title: "Kontak", path: "/contact", order: 7, isVisible: true },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -26,9 +53,13 @@ export default function Navigation() {
         
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-6 text-base font-medium">
-          {menuItems.map((item) => (
-            <Link key={item.href} href={item.href} className="text-black hover:text-orange-500 transition-colors">
-              {item.label}
+          {!isLoading && menuItems.map((item) => (
+            <Link 
+              key={item.id} 
+              href={item.path} 
+              className="text-black hover:text-orange-500 transition-colors"
+            >
+              {item.title}
             </Link>
           ))}
         </div>
@@ -60,14 +91,14 @@ export default function Navigation() {
       {isMenuOpen && (
         <div className="md:hidden fixed inset-0 z-20 bg-white pt-16">
           <div className="flex flex-col items-center gap-4 p-4">
-            {menuItems.map((item) => (
+            {!isLoading && menuItems.map((item) => (
               <Link
-                key={item.href}
-                href={item.href}
+                key={item.id}
+                href={item.path}
                 className="text-black hover:text-orange-500 transition-colors text-lg font-medium w-full text-center py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
-                {item.label}
+                {item.title}
               </Link>
             ))}
           </div>

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
-import { Service } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+
+interface CreateData {
+  title: string;
+  description: string;
+  icon: string;
+  position?: number;
+}
 
 // Function to initialize positions for existing services
 async function initializePositions() {
@@ -22,6 +28,11 @@ async function initializePositions() {
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
     const services = await prisma.service.findMany({
       orderBy: {
         position: 'asc',
@@ -35,31 +46,30 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await request.json();
     const { title, description, icon, position } = body;
 
     if (!title || !description || !icon) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
-    // Get the highest position
+    // Get the highest position value
     const lastService = await prisma.service.findFirst({
       orderBy: {
         position: 'desc',
       },
     });
 
-    const newPosition = typeof position === 'number' ? position : (lastService?.position ?? -1) + 1;
+    const newPosition = position ?? (lastService ? lastService.position + 1 : 0);
 
-    const createData: any = {
+    const createData: CreateData = {
       title,
       description,
       icon,
@@ -72,7 +82,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(service);
   } catch (error) {
-    console.error("[SERVICE_POST]", error);
+    console.error("[SERVICE_CREATE]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 } 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navigation from "./components/Navigation";
+import HeaderWrapper from "./components/HeaderWrapper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,9 +20,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-white text-black relative`}>
-        <Navigation />
-        
+      <body className={`${inter.variable} font-sans antialiased bg-white text-black relative vsc-initialized`}>
+        <HeaderWrapper />
         {/* Main Content */}
         <main className="min-h-[80vh] bg-white">{children}</main>
 

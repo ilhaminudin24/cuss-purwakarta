@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd, FaUtensils, FaHandsHelping } from 'react-icons/fa';
+import { useSession } from "next-auth/react";
+import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd, FaUtensils, FaHandsHelping, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
 
 interface Service {
@@ -24,17 +25,19 @@ const iconOptions = [
 
 export default function ServicesPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
   const [formData, setFormData] = useState({
-    icon: "",
     title: "",
     description: "",
+    icon: "",
     position: 0,
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentServiceId, setCurrentServiceId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchServices();
@@ -50,7 +53,7 @@ export default function ServicesPage() {
       setError("Error loading services");
       console.error(error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -59,30 +62,31 @@ export default function ServicesPage() {
     setError(null);
 
     try {
-      const url = editingService 
-        ? `/api/admin/services/${editingService.id}`
+      const url = isEditing
+        ? `/api/admin/services/${currentServiceId}`
         : "/api/admin/services";
       
       const response = await fetch(url, {
-        method: editingService ? "PUT" : "POST",
+        method: isEditing ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error(editingService ? "Failed to update service" : "Failed to create service");
+      if (!response.ok) throw new Error(isEditing ? "Failed to update service" : "Failed to create service");
 
       await fetchServices();
       handleCloseModal();
     } catch (error) {
-      setError(editingService ? "Error updating service" : "Error creating service");
+      setError(isEditing ? "Error updating service" : "Error creating service");
       console.error(error);
     }
   };
 
   const handleEdit = (service: Service) => {
-    setEditingService(service);
+    setIsEditing(true);
+    setCurrentServiceId(service.id);
     setFormData({
       icon: service.icon,
       title: service.title,
@@ -167,11 +171,12 @@ export default function ServicesPage() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setEditingService(null);
+    setIsEditing(false);
+    setCurrentServiceId(null);
     setFormData({ icon: "", title: "", description: "", position: 0 });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -325,7 +330,7 @@ export default function ServicesPage() {
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                     <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
-                      {editingService ? "Edit Service" : "Add New Service"}
+                      {isEditing ? "Edit Service" : "Add New Service"}
                     </h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
@@ -398,7 +403,7 @@ export default function ServicesPage() {
                           type="submit"
                           className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto"
                         >
-                          {editingService ? "Update" : "Create"}
+                          {isEditing ? "Update" : "Create"}
                         </button>
                         <button
                           type="button"

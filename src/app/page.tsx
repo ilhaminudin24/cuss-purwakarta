@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd, FaUtensils, FaHandsHelping } from 'react-icons/fa';
+import ServicesSection from "./components/ServicesSection";
 
 interface FormData {
   name: string;
@@ -124,38 +124,9 @@ export default function Home() {
         Mau kemana? Mau nitip? Mau belanja? Mau nyuruh?<br />
         Yuk, <span className="text-orange-500">Pesan CUSS Sekarang!</span>
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 justify-items-center mb-8 max-w-4xl mx-auto">
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
-          <FaMotorcycle className="text-orange-500 text-3xl mb-2" />
-          <span className="block text-orange-500 font-bold text-lg mb-1">Ojek</span>
-          <span className="text-black/70 text-sm text-center">Antar jemput cepat & nyaman</span>
-        </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
-          <FaBoxOpen className="text-orange-500 text-3xl mb-2" />
-          <span className="block text-orange-500 font-bold text-lg mb-1">Barang</span>
-          <span className="text-black/70 text-sm text-center">Kirim & ambil barang mudah</span>
-        </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
-          <FaShoppingCart className="text-orange-500 text-3xl mb-2" />
-          <span className="block text-orange-500 font-bold text-lg mb-1">Belanja</span>
-          <span className="text-black/70 text-sm text-center">Bantu belanja keperluanmu</span>
-        </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
-          <FaHandHoldingUsd className="text-orange-500 text-3xl mb-2" />
-          <span className="block text-orange-500 font-bold text-lg mb-1">Titip/Beliin</span>
-          <span className="text-black/70 text-sm text-center">Titip atau minta dibeliin apa aja</span>
-        </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
-          <FaUtensils className="text-orange-500 text-3xl mb-2" />
-          <span className="block text-orange-500 font-bold text-lg mb-1">Makanan</span>
-          <span className="text-black/70 text-sm text-center">Antar makanan atau pesan makanan favoritmu</span>
-        </div>
-        <div className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
-          <FaHandsHelping className="text-orange-500 text-3xl mb-2" />
-          <span className="block text-orange-500 font-bold text-lg mb-1">Helper</span>
-          <span className="text-black/70 text-sm text-center">Butuh bantuan harian? Serahkan pada kami</span>
-        </div>
-      </div>
+      
+      <ServicesSection />
+
       <button
         onClick={() => setModalOpen(true)}
         className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-lg transition-colors mb-2 animate-bounce"
@@ -256,33 +227,12 @@ export default function Home() {
                 {showDateTime && (
                   <input
                     type="datetime-local"
-                    className="w-full border rounded px-3 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                     value={dateTime}
                     onChange={(e) => setDateTime(e.target.value)}
+                    className="mt-2 w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 border-orange-300"
                   />
                 )}
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Catatan</label>
-                <textarea
-                  name="notes"
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  value={form.notes}
-                  onChange={handleChange}
-                  rows={3}
-                />
-              </div>
-              <div className="text-left">
-                <label className="block font-medium mb-1 text-black">Negosiasi Harga</label>
-                <select
-                  name="negotiate"
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  value={form.negotiate}
-                  onChange={handleChange}
-                >
-                  <option value="No">Tidak</option>
-                  <option value="Yes">Ya</option>
-                </select>
+                {errors.time && <span className="text-red-500 text-xs">{errors.time}</span>}
               </div>
               <div className="text-left">
                 <label className="block font-medium mb-1 text-black">Metode Pembayaran <span className="text-red-500">*</span></label>
@@ -297,9 +247,31 @@ export default function Home() {
                 </select>
                 {errors.payment && <span className="text-red-500 text-xs">{errors.payment}</span>}
               </div>
+              <div className="text-left">
+                <label className="block font-medium mb-1 text-black">Catatan</label>
+                <textarea
+                  name="notes"
+                  className="w-full border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  value={form.notes}
+                  onChange={handleChange}
+                  rows={2}
+                />
+              </div>
+              <div className="text-left">
+                <label className="block font-medium mb-1 text-black">Negosiasi Harga</label>
+                <select
+                  name="negotiate"
+                  className="w-full border border-orange-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  value={form.negotiate}
+                  onChange={handleChange}
+                >
+                  <option value="No">Tidak</option>
+                  <option value="Yes">Ya</option>
+                </select>
+              </div>
               <button
                 type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition-colors"
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 transition-colors"
               >
                 Kirim Pesanan
               </button>

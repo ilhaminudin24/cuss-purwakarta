@@ -3,6 +3,13 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
+interface UpdateData {
+  title?: string;
+  description?: string;
+  icon?: string;
+  position?: number;
+}
+
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
@@ -58,19 +65,11 @@ export async function PUT(
     const body = await req.json();
     const { title, description, icon, position } = body;
 
-    if (!title || !description || !icon) {
-      return new NextResponse("Missing required fields", { status: 400 });
-    }
-
-    const updateData: any = {
-      title,
-      description,
-      icon,
-    };
-
-    if (typeof position === 'number') {
-      updateData.position = position;
-    }
+    const updateData: UpdateData = {};
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
+    if (icon) updateData.icon = icon;
+    if (typeof position === 'number') updateData.position = position;
 
     const service = await prisma.service.update({
       where: {
