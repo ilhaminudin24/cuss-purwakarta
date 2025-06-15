@@ -62,16 +62,21 @@ export async function PUT(
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
+    const updateData: any = {
+      title,
+      description,
+      icon,
+    };
+
+    if (typeof position === 'number') {
+      updateData.position = position;
+    }
+
     const service = await prisma.service.update({
       where: {
         id: params.id,
       },
-      data: {
-        title,
-        description,
-        icon,
-        position: typeof position === 'number' ? position : 0,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(service);

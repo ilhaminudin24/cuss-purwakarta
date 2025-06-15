@@ -59,13 +59,15 @@ export async function POST(req: Request) {
 
     const newPosition = typeof position === 'number' ? position : (lastService?.position ?? -1) + 1;
 
+    const createData: any = {
+      title,
+      description,
+      icon,
+      position: newPosition,
+    };
+
     const service = await prisma.service.create({
-      data: {
-        title,
-        description,
-        icon,
-        position: newPosition,
-      },
+      data: createData,
     });
 
     return NextResponse.json(service);
