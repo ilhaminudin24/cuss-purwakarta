@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from "react";
 import { FaMotorcycle, FaBoxOpen, FaShoppingCart, FaHandHoldingUsd, FaUtensils, FaHandsHelping } from 'react-icons/fa';
+import useSWR from 'swr';
 
 interface Service {
   id: string;
-  icon: string;
   title: string;
   description: string;
-  position: number;
+  icon: string;
 }
 
 const iconMap: { [key: string]: any } = {
@@ -20,63 +20,77 @@ const iconMap: { [key: string]: any } = {
   'FaHandsHelping': FaHandsHelping,
 };
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function ServicesSection() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: services, error, isLoading } = useSWR<Service[]>('/api/services', fetcher, {
+    refreshInterval: 5000, // Refresh every 5 seconds
+  });
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await fetch('/api/services');
-        if (!response.ok) throw new Error('Failed to fetch services');
-        const data = await response.json();
-        setServices(data);
-      } catch (error) {
-        setError('Error loading services');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchServices();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 justify-items-center mb-8 max-w-4xl mx-auto">
-        {[...Array(6)].map((_, index) => (
-          <div key={index} className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] animate-pulse">
-            <div className="h-12 w-12 bg-orange-200 rounded-full mx-auto mb-2"></div>
-            <div className="h-6 w-24 bg-orange-200 rounded mx-auto mb-1"></div>
-            <div className="h-4 w-full bg-orange-200 rounded"></div>
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Loading services...
+            </h2>
           </div>
-        ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-red-500 text-center mb-8">
-        {error}
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+              Error loading services
+            </h2>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 justify-items-center mb-8 max-w-4xl mx-auto">
-      {services.map((service) => {
-        const IconComponent = iconMap[service.icon];
-        return (
-          <div key={service.id} className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center">
-            {IconComponent && <IconComponent className="text-orange-500 text-3xl mb-2" />}
-            <span className="block text-orange-500 font-bold text-lg mb-1">{service.title}</span>
-            <span className="text-black/70 text-sm text-center">{service.description}</span>
-          </div>
-        );
-      })}
+    <div className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-orange-500 sm:text-4xl">
+            Our Services
+          </h2>
+          <p className="mt-4 text-lg text-gray-500">
+            We provide a wide range of services to meet your needs
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {services?.map((service: Service) => {
+            const Icon = iconMap[service.icon] || FaMotorcycle;
+            return (
+              <div
+                key={service.id}
+                className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white mb-4">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {service.title}
+                  </h3>
+                  <p className="mt-2 text-base text-gray-500">
+                    {service.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 } 
