@@ -29,68 +29,35 @@ export default function ServicesSection() {
 
   if (isLoading) {
     return (
-      <div className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Loading services...
-            </h2>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Error loading services
-            </h2>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-orange-500 font-bold">Error loading services</div>
       </div>
     );
   }
 
   return (
-    <div className="py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-orange-500 sm:text-4xl">
-            Our Services
-          </h2>
-          <p className="mt-4 text-lg text-gray-500">
-            We provide a wide range of services to meet your needs
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {services?.map((service: Service) => {
-            const Icon = iconMap[service.icon] || FaMotorcycle;
-            return (
-              <div
-                key={service.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-center h-12 w-12 rounded-md bg-orange-500 text-white mb-4">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {service.title}
-                  </h3>
-                  <p className="mt-2 text-base text-gray-500">
-                    {service.description}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+    <section className="max-w-4xl mx-auto py-12 px-4">
+      <h2 className="text-2xl sm:text-3xl font-bold text-orange-500 mb-8 text-center">Layanan Kami</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
+        {services?.map((service: Service) => {
+          const IconComponent = iconMap[service.icon] || FaMotorcycle;
+          return (
+            <div key={service.id} className="bg-orange-500/10 border border-orange-200 rounded-xl px-6 py-4 w-full max-w-[280px] flex flex-col items-center text-center shadow-sm">
+              {IconComponent && <IconComponent className="text-orange-500 text-3xl mb-2" />}
+              <h3 className="font-bold text-lg text-orange-500 mb-1">{service.title}</h3>
+              <p className="text-black/70 text-sm">{service.description}</p>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 } 
