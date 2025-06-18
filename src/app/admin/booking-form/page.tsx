@@ -9,9 +9,15 @@ interface BookingFormField {
   name: string;
   type: string;
   required: boolean;
+  readonly: boolean;
   position: number;
   options?: string[];
   isActive: boolean;
+  autoCalculate?: {
+    type: "distance";
+    from: string;
+    to: string;
+  };
 }
 
 interface FormData {
@@ -19,7 +25,13 @@ interface FormData {
   name: string;
   type: string;
   required: boolean;
+  readonly: boolean;
   options?: string[];
+  autoCalculate?: {
+    type: "distance";
+    from: string;
+    to: string;
+  };
 }
 
 export default function BookingFormFieldsPage() {
@@ -32,8 +44,11 @@ export default function BookingFormFieldsPage() {
     name: "",
     type: "text",
     required: false,
+    readonly: false,
     options: [],
   });
+
+  const [availableMapFields, setAvailableMapFields] = useState<BookingFormField[]>([]);
 
   const fieldTypes = [
     { value: "text", label: "Text" },
@@ -78,11 +93,17 @@ export default function BookingFormFieldsPage() {
       : "/api/admin/booking-form-fields";
     const method = editingField ? "PUT" : "POST";
 
+    // If it's a number field, check if we want to enable auto-calculation
+    const finalFormData = { ...formData };
+    if (formData.type === "number" && formData.autoCalculate?.from && formData.autoCalculate?.to) {
+      finalFormData.readonly = true; // Force readonly for auto-calculated fields
+    }
+
     try {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalFormData),
       });
 
       if (!response.ok) throw new Error("Failed to save field");
@@ -95,7 +116,9 @@ export default function BookingFormFieldsPage() {
         name: "",
         type: "text",
         required: false,
+        readonly: false,
         options: [],
+        autoCalculate: undefined,
       });
     } catch (error) {
       console.error("Error saving field:", error);
@@ -121,7 +144,9 @@ export default function BookingFormFieldsPage() {
       name: field.name,
       type: field.type,
       required: field.required,
+      readonly: field.readonly || false,
       options: field.options || [],
+      autoCalculate: field.autoCalculate,
     });
     setIsModalOpen(true);
   };
@@ -211,6 +236,11 @@ export default function BookingFormFieldsPage() {
     fetchFields();
   }, []);
 
+  useEffect(() => {
+    // Update available map fields whenever fields change
+    setAvailableMapFields(fields.filter(f => f.type === "map"));
+  }, [fields]);
+
   if (!session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -238,6 +268,7 @@ export default function BookingFormFieldsPage() {
                 name: "",
                 type: "text",
                 required: false,
+                readonly: false,
                 options: [],
               });
               setIsModalOpen(true);
@@ -264,6 +295,9 @@ export default function BookingFormFieldsPage() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Required
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Read Only
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -298,6 +332,9 @@ export default function BookingFormFieldsPage() {
                 <td className="px-6 py-4 whitespace-nowrap">{field.type}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {field.required ? "Yes" : "No"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {field.readonly ? "Yes" : "No"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
@@ -335,7 +372,7 @@ export default function BookingFormFieldsPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
               {editingField ? "Edit Field" : "Add Field"}
             </h2>
@@ -418,26 +455,112 @@ export default function BookingFormFieldsPage() {
                   </button>
                 </div>
               )}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="required"
-                  checked={formData.required}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      required: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="required"
-                  className="ml-2 block text-sm text-gray-900"
-                >
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.required}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        required: e.target.checked,
+                      }))
+                    }
+                    className="mr-2"
+                  />
                   Required
                 </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.readonly}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        readonly: e.target.checked,
+                      }))
+                    }
+                    className="mr-2"
+                  />
+                  Read Only
+                </label>
               </div>
+              {formData.type === "number" && (
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Auto Calculate
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={!!formData.autoCalculate}
+                        onChange={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            autoCalculate: e.target.checked 
+                              ? { type: "distance", from: "", to: "" }
+                              : undefined
+                          }));
+                        }}
+                        className="mr-2"
+                      />
+                      Calculate Distance Between Points
+                    </label>
+                    
+                    {formData.autoCalculate && (
+                      <div className="ml-6 space-y-2">
+                        <div>
+                          <label className="block text-sm text-gray-600">From</label>
+                          <select
+                            value={formData.autoCalculate.from}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                autoCalculate: {
+                                  ...prev.autoCalculate!,
+                                  from: e.target.value
+                                }
+                              }));
+                            }}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          >
+                            <option value="">Select starting point</option>
+                            {availableMapFields.map(field => (
+                              <option key={field.id} value={field.name}>
+                                {field.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600">To</label>
+                          <select
+                            value={formData.autoCalculate.to}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                autoCalculate: {
+                                  ...prev.autoCalculate!,
+                                  to: e.target.value
+                                }
+                              }));
+                            }}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          >
+                            <option value="">Select destination point</option>
+                            {availableMapFields.map(field => (
+                              <option key={field.id} value={field.name}>
+                                {field.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"

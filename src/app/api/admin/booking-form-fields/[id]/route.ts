@@ -8,13 +8,23 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const { label, name, type, required, options, isActive, position } = await req.json();
+  const { label, name, type, required, readonly, options, isActive, position, autoCalculate } = await req.json();
   if (!label || !name || !type) {
     return NextResponse.json({ error: "label, name, and type are required." }, { status: 400 });
   }
   const field = await prisma.bookingFormField.update({
     where: { id: params.id },
-    data: { label, name, type, required: !!required, options: options ?? null, isActive, position },
+    data: { 
+      label, 
+      name, 
+      type, 
+      required: !!required, 
+      readonly: !!readonly,
+      options: options ?? null, 
+      isActive, 
+      position,
+      autoCalculate: autoCalculate ?? null
+    },
   });
   return NextResponse.json(field);
 }

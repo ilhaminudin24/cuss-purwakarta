@@ -92,16 +92,18 @@ model NavigationMenu {
 }
 
 model BookingFormField {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  label     String
-  name      String
-  type      String
-  required  Boolean  @default(false)
-  position  Int      @default(0)
-  options   Json?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  label       String
+  name        String
+  type        String
+  required    Boolean  @default(false)
+  readonly    Boolean  @default(false)
+  position    Int      @default(0)
+  options     Json?
+  isActive    Boolean  @default(true)
+  autoCalculate Json?  // { type: "distance", from: "pickup", to: "destination" }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model BookingService {

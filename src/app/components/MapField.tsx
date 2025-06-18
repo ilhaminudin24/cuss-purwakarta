@@ -17,6 +17,7 @@ interface MapFieldProps {
   control: Control;
   label: string;
   required?: boolean;
+  readonly?: boolean;
 }
 
 export default function MapField({
@@ -24,6 +25,7 @@ export default function MapField({
   control,
   label,
   required = false,
+  readonly = false,
 }: MapFieldProps) {
   return (
     <div className="space-y-2">
@@ -38,6 +40,7 @@ export default function MapField({
           <GoogleMapField
             value={value as MapValue}
             onChange={onChange}
+            readonly={readonly}
           />
         )}
       />
