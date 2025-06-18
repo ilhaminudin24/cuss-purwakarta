@@ -4,7 +4,7 @@ import useSWR from "swr";
 import Image from "next/image";
 import ServicesSection from "./components/ServicesSection";
 import MapField from "./components/MapField";
-import { useForm, FormProvider, Controller } from "react-hook-form";
+import { useForm, FormProvider, Controller, useWatch } from "react-hook-form";
 
 interface BookingFormField {
   id: string;
@@ -16,6 +16,11 @@ interface BookingFormField {
   position: number;
   options?: string[];
   isActive: boolean;
+  autoCalculate?: {
+    type: "distance";
+    from: string;
+    to: string;
+  };
 }
 
 interface FormData {
@@ -28,12 +33,43 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const methods = useForm();
-  const { control, handleSubmit, reset } = methods;
+  const { control, handleSubmit, reset, setValue } = methods;
   const { data: fields = [] } = useSWR<BookingFormField[]>(
     "/api/admin/booking-form-fields",
     fetcher,
     { refreshInterval: 5000 }
   );
+
+  // Watch for changes in map fields to update calculated distances
+  useEffect(() => {
+    const autoCalculateFields = fields.filter(f => f.type === "number" && f.autoCalculate);
+    
+    if (autoCalculateFields.length === 0) return;
+
+    const subscription = methods.watch((values, { name }) => {
+      autoCalculateFields.forEach(field => {
+        if (!field.autoCalculate) return;
+
+        const { from, to } = field.autoCalculate;
+        const fromValue = values[from];
+        const toValue = values[to];
+
+        // Only calculate if both locations are set and one of them changed
+        if (fromValue && toValue && (name === from || name === to)) {
+          // Calculate distance using Haversine formula
+          const distance = calculateDistance(
+            fromValue.lat,
+            fromValue.lng,
+            toValue.lat,
+            toValue.lng
+          );
+          setValue(field.name, distance.toFixed(2));
+        }
+      });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fields, methods, setValue]);
 
   // Set default values when fields change
   useEffect(() => {
@@ -262,4 +298,21 @@ export default function Home() {
       </section>
     </FormProvider>
   );
+}
+
+// Haversine formula to calculate distance between two points
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in kilometers
+}
+
+function toRad(degrees: number): number {
+  return degrees * (Math.PI / 180);
 }

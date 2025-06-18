@@ -9,7 +9,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { label, name, type, required, options, isActive } = await req.json();
+  const { label, name, type, required, readonly, options, isActive, autoCalculate } = await req.json();
   if (!label || !name || !type) {
     return NextResponse.json({ error: "label, name, and type are required." }, { status: 400 });
   }
@@ -21,9 +21,11 @@ export async function POST(req: NextRequest) {
       name,
       type,
       required: !!required,
+      readonly: !!readonly,
       options: options ?? null,
       isActive: isActive ?? true,
       position,
+      autoCalculate: autoCalculate ?? null,
     },
   });
   return NextResponse.json(field);
