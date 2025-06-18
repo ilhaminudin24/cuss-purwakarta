@@ -1,180 +1,247 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import * as Icons from "lucide-react";
-import { LucideIcon } from "lucide-react";
+import useSWR from "swr";
+import { useState, useRef, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaUser, FaSignOutAlt } from "react-icons/fa"; // Import icons
 
-interface NavigationMenu {
+interface MenuItem {
   id: string;
   title: string;
-  path?: string | null;
-  icon?: string | null;
+  path: string;
   order: number;
   isVisible: boolean;
   menuType: string;
-  parentId?: string | null;
-  children?: NavigationMenu[];
+  group?: string;
 }
+
+const fetcher = (url: string) => fetch(url, {
+  cache: 'no-store',
+  headers: {
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  }
+}).then((res) => res.json());
 
 export default function AdminNavigation() {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const [menuItems, setMenuItems] = useState<NavigationMenu[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+  const { data: menuItems, error, isLoading } = useSWR<MenuItem[]>(
+    '/api/admin/navigation', fetcher, {
+      refreshInterval: 5000,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 0,
+      keepPreviousData: false
+    }
+  );
 
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    let mounted = true;
-
-    const fetchMenuItems = async () => {
-      try {
-        const response = await fetch("/api/admin/navigation/init", {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        if (!response.ok) throw new Error("Failed to fetch navigation");
-        const data = await response.json();
-
-        if (!mounted) return;
-
-        // Create a Set to track unique IDs
-        const seenIds = new Set<string>();
-        const uniqueData = data.filter((item: NavigationMenu) => {
-          if (seenIds.has(item.id)) return false;
-          seenIds.add(item.id);
-          return true;
-        });
-
-        // Organize items into a hierarchy
-        const parentItems: NavigationMenu[] = [];
-        const childrenMap = new Map<string, NavigationMenu[]>();
-
-        uniqueData.forEach((item: NavigationMenu) => {
-          if (!item.parentId) {
-            parentItems.push(item);
-          } else {
-            if (!childrenMap.has(item.parentId)) {
-              childrenMap.set(item.parentId, []);
-            }
-            childrenMap.get(item.parentId)?.push(item);
-          }
-        });
-
-        // Sort parent items by order
-        parentItems.sort((a, b) => a.order - b.order);
-
-        // Add sorted children to their parents
-        parentItems.forEach((parent) => {
-          const children = childrenMap.get(parent.id);
-          if (children) {
-            children.sort((a, b) => a.order - b.order);
-            parent.children = children;
-          }
-        });
-
-        setMenuItems(parentItems);
-      } catch (err) {
-        if (mounted) {
-          setError(err instanceof Error ? err.message : "Failed to fetch navigation");
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
       }
-    };
-
-    fetchMenuItems();
-
-    return () => {
-      mounted = false;
-    };
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Debug log to check menu items
+  useEffect(() => {
+    if (menuItems) {
+      console.log('Menu Items:', menuItems);
+    }
+  }, [menuItems]);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/admin/login' });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-red-500 p-4">
-        Error: {error}
-      </div>
-    );
-  }
-
-  const renderMenuItem = (item: NavigationMenu) => {
-    const IconComponent = item.icon ? (Icons[item.icon as keyof typeof Icons] as LucideIcon) : null;
-    const isActive = item.path ? pathname === item.path : false;
-    const hasChildren = item.children && item.children.length > 0;
-
-    return (
-      <div key={item.id} className="relative">
-        {item.path ? (
-          <div className="px-2">
-            <Link
-              href={item.path}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                isActive
-                  ? "bg-orange-500 text-white hover:bg-orange-600"
-                  : "hover:bg-orange-100 text-gray-700"
-              }`}
-            >
-              {IconComponent && <IconComponent className="shrink-0" size={20} />}
-              <span className="truncate">{item.title}</span>
-            </Link>
-          </div>
-        ) : (
-          <div className="px-2">
-            <div className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">
-              {IconComponent && <IconComponent className="shrink-0" size={20} />}
-              <span className="truncate">{item.title}</span>
+      <nav className="bg-indigo-900 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <div className="animate-pulse h-8 w-32 bg-gray-200 rounded"></div>
+              </div>
             </div>
           </div>
-        )}
-        {hasChildren && (
-          <div className="ml-4 border-l border-gray-200 pl-2 space-y-1">
-            {item.children?.map(renderMenuItem)}
-          </div>
-        )}
-      </div>
+        </div>
+      </nav>
     );
-  };
+  }
+
+  if (error || !menuItems) {
+    return (
+      <nav className="bg-indigo-900 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <Link href="/admin" className="text-xl font-bold text-white">
+                  CUSS Admin
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  const validMenuItems = menuItems.filter(item => item.path && item.path.trim() !== '' && item.menuType === 'admin');
+  const dashboardItem = validMenuItems.find(item => item.path === '/admin' || item.path === 'admin');
+  const transactionsItem = validMenuItems.find(item => item.path === '/admin/transactions');
+  const configItems = validMenuItems.filter(item => 
+    item.path !== '/admin' && 
+    item.path !== 'admin' && 
+    item.path !== '/admin/transactions'
+  );
 
   return (
-    <nav className="py-4 h-full">
-      <div className="space-y-1 mb-4">
-        {menuItems.map(renderMenuItem)}
-      </div>
-      
-      {/* User Profile and Logout Section */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-4">
-        <div className="flex items-center gap-3 mb-2">
-          <FaUser className="text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">{session?.user?.email}</span>
+    <nav className="bg-indigo-900 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative flex items-center justify-between h-16">
+          {/* Logo on the left */}
+          <div className="flex items-center">
+            <Link href="/admin" className="text-xl font-bold text-white">
+              CUSS Admin
+            </Link>
+          </div>
+
+          {/* Center menu */}
+          <div className="flex-1 flex justify-center px-2 lg:ml-6 lg:justify-center">
+            <div className="hidden sm:flex sm:space-x-8">
+              {/* Dashboard Link - Always show */}
+              <Link
+                href="/admin"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  pathname === '/admin'
+                    ? "border-white text-white"
+                    : "border-transparent text-indigo-200 hover:border-indigo-300 hover:text-white"
+                }`}
+              >
+                Dashboard
+              </Link>
+
+              {/* Transactions Link */}
+              {transactionsItem && (
+                <Link
+                  href="/admin/transactions"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    pathname === '/admin/transactions'
+                      ? "border-white text-white"
+                      : "border-transparent text-indigo-200 hover:border-indigo-300 hover:text-white"
+                  }`}
+                >
+                  Riwayat Transaksi
+                </Link>
+              )}
+
+              {/* Configuration Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    configItems.some(item => pathname === item.path)
+                      ? "border-white text-white"
+                      : "border-transparent text-indigo-200 hover:border-indigo-300 hover:text-white"
+                  }`}
+                >
+                  Konfigurasi
+                  <svg
+                    className={`ml-2 h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown menu */}
+                {isDropdownOpen && (
+                  <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="py-1" role="menu" aria-orientation="vertical">
+                      {configItems.map((item) => {
+                        const path = item.path.startsWith('/') ? item.path : `/${item.path}`;
+                        return (
+                          <Link
+                            key={item.id}
+                            href={path}
+                            className={`block px-4 py-2 text-sm ${
+                              pathname === path
+                                ? "bg-indigo-100 text-indigo-900"
+                                : "text-gray-700 hover:bg-indigo-50"
+                            }`}
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            {item.title}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* User menu on the right */}
+          <div className="flex items-center">
+            <div className="relative" ref={userDropdownRef}>
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center text-indigo-200 hover:text-white"
+              >
+                <FaUser className="h-5 w-5" />
+                <span className="ml-2 text-sm font-medium">{session?.user?.name || session?.user?.email}</span>
+                <svg
+                  className={`ml-2 h-4 w-4 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* User dropdown menu */}
+              {isUserDropdownOpen && (
+                <div className="absolute right-0 z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                  <div className="py-1" role="menu" aria-orientation="vertical">
+                    <div className="px-4 py-2 text-xs text-gray-500">
+                      Logged in as
+                      <div className="font-medium text-gray-900">{session?.user?.email}</div>
+                    </div>
+                    <div className="border-t border-gray-100"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center"
+                    >
+                      <FaSignOutAlt className="mr-2" />
+                      Keluar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-        >
-          <FaSignOutAlt />
-          <span>Logout</span>
-        </button>
       </div>
     </nav>
   );

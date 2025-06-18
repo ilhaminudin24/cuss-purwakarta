@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
-import AdminLayoutClient from '../AdminLayoutClient';
 
 interface FAQ {
   id: string;
@@ -93,10 +92,18 @@ export default function FAQsPage() {
     });
   };
 
-  const content = (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">FAQ Management</h1>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">FAQ Management</h1>
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
@@ -107,7 +114,7 @@ export default function FAQsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
@@ -157,7 +164,7 @@ export default function FAQsPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
             <h2 className="text-xl font-bold mb-4">
               {editingFaq ? "Edit FAQ" : "Add New FAQ"}
@@ -194,21 +201,22 @@ export default function FAQsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, answer: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   {editingFaq ? "Update" : "Create"}
                 </button>
@@ -219,16 +227,4 @@ export default function FAQsPage() {
       )}
     </div>
   );
-
-  if (isLoading) {
-    return (
-      <AdminLayoutClient>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      </AdminLayoutClient>
-    );
-  }
-
-  return <AdminLayoutClient>{content}</AdminLayoutClient>;
 } 

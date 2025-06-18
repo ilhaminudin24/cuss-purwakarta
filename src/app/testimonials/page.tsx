@@ -1,60 +1,31 @@
-"use client";
-
-import { useEffect, useState } from 'react';
-
-interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  content: string;
-  position: number;
-  isActive: boolean;
-}
+const testimonials = [
+  {
+    name: 'Rina, Ibu Rumah Tangga',
+    text: 'Pelayanannya ramah, cepat, dan harga terjangkau.'
+  },
+  {
+    name: 'Alvin, Mahasiswa',
+    text: 'Titip barang ke kampus jadi gampang banget. Driver-nya juga sopan.'
+  },
+  {
+    name: 'Cici Nci, Pemilik Toko',
+    text: 'Bantu banget buat kirim barang ke pelanggan. Respon adminnya juga cepat.'
+  },
+  {
+    name: 'Andi, Karyawan',
+    text: 'Pernah nego harga via WhatsApp, tetap dilayani dengan baik. Mantap!'
+  },
+];
 
 export default function TestimonialsPage() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const response = await fetch('/api/testimonials');
-        if (!response.ok) throw new Error('Failed to fetch testimonials');
-        const data = await response.json();
-        setTestimonials(data.filter((testimonial: Testimonial) => testimonial.isActive));
-      } catch (error) {
-        console.error('Error fetching testimonials:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTestimonials();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-      </div>
-    );
-  }
-
   return (
-    <section className="max-w-4xl mx-auto py-12 px-4">
-      <h2 className="text-2xl sm:text-3xl font-bold text-orange-500 mb-8 text-center">Testimonial</h2>
+    <section className="max-w-3xl mx-auto py-12 px-4">
+      <h2 className="text-2xl sm:text-3xl font-bold text-orange-500 mb-8 text-center">Testimoni Pelanggan</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {testimonials.map((testimonial) => (
-          <div key={testimonial.id} className="bg-orange-500/10 border border-orange-200 rounded-xl p-6">
-            <div className="flex flex-col h-full">
-              <blockquote className="flex-grow mb-4">
-                <p className="text-black/70 italic">&ldquo;{testimonial.content}&rdquo;</p>
-              </blockquote>
-              <div>
-                <p className="font-bold text-orange-500">{testimonial.name}</p>
-                <p className="text-sm text-black/60">{testimonial.role}</p>
-              </div>
-            </div>
+        {testimonials.map((t, i) => (
+          <div key={i} className="bg-orange-500/10 border border-orange-200 rounded-xl p-6 shadow-sm flex flex-col gap-2">
+            <p className="text-black/80 text-base mb-2">&ldquo;{t.text}&rdquo;</p>
+            <span className="text-orange-500 font-bold text-sm">- {t.name}</span>
           </div>
         ))}
       </div>

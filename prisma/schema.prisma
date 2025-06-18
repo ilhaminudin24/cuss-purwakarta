@@ -81,21 +81,14 @@ model FAQ {
 }
 
 model NavigationMenu {
-  id          String          @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  path        String?         // Optional for parent menus that don't have a direct path
-  icon        String?         // Optional icon for menu items
-  order       Int            @default(0)
-  isVisible   Boolean        @default(true)
-  menuType    String         @default("website") // "website" or "admin"
-  parentId    String?        @db.ObjectId        // Reference to parent menu
-  parent      NavigationMenu? @relation("MenuHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  children    NavigationMenu[] @relation("MenuHierarchy")
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  @@index([parentId])
-  @@index([order])
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  path      String
+  order     Int      @default(0)
+  isVisible Boolean  @default(true)
+  menuType  String   @default("website") // "website" or "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BookingFormField {
@@ -136,51 +129,4 @@ model Transaction {
   status       String   @default("pending") // pending, completed, cancelled
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-}
-
-model Testimonial {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  role      String
-  content   String
-  position  Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([position])
-}
-
-model AboutContent {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  title     String
-  content   String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ContactInfo {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  type      String   // "whatsapp", "phone", "instagram", etc.
-  value     String
-  position  Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([position])
-}
-
-model OrderStep {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  icon        String
-  position    Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([position])
 }
