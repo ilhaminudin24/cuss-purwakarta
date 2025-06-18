@@ -6,21 +6,31 @@ import { authOptions } from "@/lib/auth";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    console.log("SESSION:", session);
 
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }), 
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const menuItems = await prisma.navigationMenu.findMany({
-      where: { menuType: "admin" },
+      where: { 
+        menuType: "admin",
+        isVisible: true 
+      },
       orderBy: { order: "asc" },
     });
 
     return NextResponse.json(menuItems);
   } catch (error) {
     console.error("[NAVIGATION_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: "Internal server error" }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

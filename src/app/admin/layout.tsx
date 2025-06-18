@@ -14,25 +14,29 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Only protect routes other than /admin/login
   useEffect(() => {
+    if (status === 'loading') return;
+    
     if (pathname !== "/admin/login" && status === "unauthenticated") {
       router.push("/admin/login");
     }
   }, [status, router, pathname]);
 
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
-
+  // Show loading state while checking session
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
+  // Allow access to login page
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
+  // Prevent flash of unauthorized content
   if (!session) {
     return null;
   }

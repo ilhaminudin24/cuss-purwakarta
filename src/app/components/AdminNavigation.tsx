@@ -34,7 +34,18 @@ export default function AdminNavigation() {
     const fetchMenuItems = async () => {
       try {
         setLoading(true);
-        const data = await getAdminNavigation();
+        const response = await fetch('/api/admin/navigation', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
 
         if (!mounted) return;
 
