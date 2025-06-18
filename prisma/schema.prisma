@@ -112,3 +112,19 @@ model BookingService {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+/// @map("transactions")
+model Transaction {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  whatsapp     String?  // Made optional to handle existing null values
+  service      String
+  pickup       Json     // { lat: number, lng: number, address: string }
+  destination  Json     // { lat: number, lng: number, address: string }
+  distance     Float
+  subscription Boolean  @default(false)
+  notes        String?
+  status       String   @default("pending") // pending, completed, cancelled
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

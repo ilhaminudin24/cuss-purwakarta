@@ -1,5 +1,7 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const uri = process.env.DATABASE_URL || 'mongodb://localhost:27017/your-db-name'; // Update with your DB name if needed
 const dbName = uri.split('/').pop().split('?')[0];
@@ -44,4 +46,26 @@ async function updateMenuTypes() {
   }
 }
 
-updateMenuTypes(); 
+async function addTransactionsMenu() {
+  try {
+    // Add Transactions menu item
+    await prisma.navigationMenu.create({
+      data: {
+        title: 'Riwayat Transaksi',
+        path: '/admin/transactions',
+        order: 3, // After Dashboard and Services
+        isVisible: true,
+        menuType: 'admin',
+      },
+    });
+
+    console.log('Successfully added Transactions menu item');
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+updateMenuTypes();
+addTransactionsMenu(); 

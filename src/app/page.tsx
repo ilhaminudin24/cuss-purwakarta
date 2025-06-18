@@ -70,27 +70,65 @@ export default function Home() {
     };
   }, [modalOpen]);
 
-  const onSubmit = (data: FormData) => {
-    // Format WhatsApp message
-    const message = [
-      'Halo CUSS Purwakarta! 👋',
-      'Saya ingin memesan layanan:',
-      '',
-      ...fields.map(field => {
-        const value = data[field.name];
-        if (field.type === 'checkbox') {
-          return `${field.label}: ${value ? 'Ya' : 'Tidak'}`;
-        }
-        if (field.type === 'map' && value) {
-          return `${field.label}: ${value.address || `${value.lat}, ${value.lng}`}`;
-        }
-        return `${field.label}: ${value || '-'}`;
-      })
-    ].join('\n');
+  const onSubmit = async (data: FormData) => {
+    try {
+      // Log the form data for debugging
+      console.log('Submitting form data:', data);
 
-    const whatsappText = encodeURIComponent(message);
-    const waLink = `https://wa.me/6287858860846?text=${whatsappText}`;
-    window.open(waLink, '_blank');
+      // Map form fields to expected API fields
+      const formattedData = {
+        name: data.name || '',
+        whatsapp: data.whatsapp || '',
+        service: data.service || '',
+        pickup: data.pickup || { lat: 0, lng: 0, address: '' },
+        destination: data.Dropoff || data.destination || { lat: 0, lng: 0, address: '' }, // Handle both field names
+        distance: parseFloat(data.distance || '0'),
+        subscription: Boolean(data.subscription),
+        notes: data.notes || '',
+      };
+
+      console.log('Formatted data:', formattedData);
+
+      // Create transaction record
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
+      });
+
+      const responseData = await response.json();
+      console.log('API Response:', responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.details || responseData.error || 'Failed to create transaction');
+      }
+
+      // Format WhatsApp message
+      const message = [
+        'Halo CUSS Purwakarta! 👋',
+        'Saya ingin memesan layanan:',
+        '',
+        ...fields.map(field => {
+          const value = data[field.name];
+          if (field.type === 'checkbox') {
+            return `${field.label}: ${value ? 'Ya' : 'Tidak'}`;
+          }
+          if (field.type === 'map' && value) {
+            return `${field.label}: ${value.address || `${value.lat}, ${value.lng}`}`;
+          }
+          return `${field.label}: ${value || '-'}`;
+        })
+      ].join('\n');
+
+      const whatsappText = encodeURIComponent(message);
+      const waLink = `https://wa.me/6287858860846?text=${whatsappText}`;
+      window.open(waLink, '_blank');
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      alert('Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.');
+    }
   };
 
   const renderField = (field: BookingFormField) => {
