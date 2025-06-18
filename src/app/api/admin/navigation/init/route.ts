@@ -22,6 +22,44 @@ const adminMenuItems = [
   { title: "Form Pemesanan", path: "/admin/booking-form", order: 6, isVisible: true, menuType: "admin" },
 ];
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Fetch all menu items
+    const menuItems = await prisma.navigationMenu.findMany({
+      where: {
+        menuType: "admin",
+        isVisible: true,
+      },
+      orderBy: {
+        order: 'asc'
+      }
+    });
+
+    // If no menu items exist, initialize with default admin items
+    if (menuItems.length === 0) {
+      const createdItems = await Promise.all(
+        adminMenuItems.map((item) =>
+          prisma.navigationMenu.create({
+            data: item,
+          })
+        )
+      );
+      return NextResponse.json(createdItems);
+    }
+
+    return NextResponse.json(menuItems);
+  } catch (error) {
+    console.error("[NAVIGATION_GET]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
 export async function POST() {
   try {
     const session = await getServerSession(authOptions);
