@@ -11,6 +11,8 @@ interface MenuItem {
   path: string;
   order: number;
   isVisible: boolean;
+  menuType: string;
+  group?: string;
 }
 
 const fetcher = (url: string) => fetch(url, {
