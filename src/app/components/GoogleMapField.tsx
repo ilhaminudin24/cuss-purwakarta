@@ -2,7 +2,14 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { GoogleMap, Marker, useJsApiLoader, Autocomplete } from "@react-google-maps/api";
 import { MapValue } from "../types/map";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyBMZkwSpZt7G3l6FbzuOuV0pHHZW8TYcvM";
+// Use the environment variable
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+// Add some debug logging in development
+if (process.env.NODE_ENV === 'development' && !GOOGLE_MAPS_API_KEY) {
+  console.warn('Google Maps API key is missing. Please check your .env.local file.');
+}
+
 const PURWAKARTA_CENTER = { lat: -6.5567, lng: 107.4439 };
 const DEFAULT_ZOOM = 14;
 
@@ -25,7 +32,7 @@ interface GoogleMapFieldProps {
 }
 
 export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps) {
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: ["places"]
   });
@@ -91,6 +98,18 @@ export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps)
       }
     }
   };
+
+  if (loadError) {
+    console.error('Google Maps load error:', loadError);
+    return (
+      <div className="h-[400px] bg-red-50 rounded-lg flex items-center justify-center text-red-500 p-4">
+        <div className="text-center">
+          <p className="font-semibold">Error loading Google Maps</p>
+          <p className="text-sm mt-2">Please check the API configuration.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoaded) return <div className="h-[400px] bg-gray-100 rounded-lg animate-pulse" />;
 
