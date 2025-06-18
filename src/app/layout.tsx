@@ -21,7 +21,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-white text-black relative vsc-initialized`}>
+      <body
+        suppressHydrationWarning={true}
+        className={`${inter.variable} font-sans antialiased bg-white text-black relative vsc-initialized`}
+      >
         <Providers>
           <HeaderWrapper />
           {/* Main Content */}

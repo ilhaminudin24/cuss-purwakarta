@@ -103,7 +103,12 @@ export default function AdminNavigation() {
 
   const validMenuItems = menuItems.filter(item => item.path && item.path.trim() !== '' && item.menuType === 'admin');
   const dashboardItem = validMenuItems.find(item => item.path === '/admin' || item.path === 'admin');
-  const configItems = validMenuItems.filter(item => item.path !== '/admin' && item.path !== 'admin');
+  const transactionsItem = validMenuItems.find(item => item.path === '/admin/transactions');
+  const configItems = validMenuItems.filter(item => 
+    item.path !== '/admin' && 
+    item.path !== 'admin' && 
+    item.path !== '/admin/transactions'
+  );
 
   return (
     <nav className="bg-indigo-900 shadow-sm">
@@ -130,6 +135,20 @@ export default function AdminNavigation() {
               >
                 Dashboard
               </Link>
+
+              {/* Transactions Link */}
+              {transactionsItem && (
+                <Link
+                  href="/admin/transactions"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    pathname === '/admin/transactions'
+                      ? "border-white text-white"
+                      : "border-transparent text-indigo-200 hover:border-indigo-300 hover:text-white"
+                  }`}
+                >
+                  Riwayat Transaksi
+                </Link>
+              )}
 
               {/* Configuration Dropdown */}
               <div className="relative" ref={dropdownRef}>
