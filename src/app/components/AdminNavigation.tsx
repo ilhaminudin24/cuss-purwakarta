@@ -7,7 +7,6 @@ import * as Icons from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { FaUser, FaSignOutAlt } from "react-icons/fa";
-import { getAdminNavigation } from "@/lib/navigation";
 
 interface NavigationMenu {
   id: string;
@@ -27,83 +26,86 @@ export default function AdminNavigation() {
   const [menuItems, setMenuItems] = useState<NavigationMenu[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const fetchMenuItems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/admin/navigation', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.error || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      // Create a Set to track unique IDs
+      const seenIds = new Set<string>();
+      const uniqueData = data.filter((item: NavigationMenu) => {
+        if (seenIds.has(item.id)) return false;
+        seenIds.add(item.id);
+        return true;
+      });
+
+      // Organize items into a hierarchy
+      const parentItems: NavigationMenu[] = [];
+      const childrenMap = new Map<string, NavigationMenu[]>();
+
+      uniqueData.forEach((item: NavigationMenu) => {
+        if (!item.parentId) {
+          parentItems.push(item);
+        } else {
+          if (!childrenMap.has(item.parentId)) {
+            childrenMap.set(item.parentId, []);
+          }
+          childrenMap.get(item.parentId)?.push(item);
+        }
+      });
+
+      // Sort parent items by order
+      parentItems.sort((a, b) => a.order - b.order);
+
+      // Add sorted children to their parents
+      parentItems.forEach((parent) => {
+        const children = childrenMap.get(parent.id);
+        if (children) {
+          children.sort((a, b) => a.order - b.order);
+          parent.children = children;
+        }
+      });
+
+      setMenuItems(parentItems);
+      setError(null);
+      setRetryCount(0); // Reset retry count on success
+    } catch (err) {
+      console.error('Navigation fetch error:', err);
+      setError(err instanceof Error ? err.message : "Failed to fetch navigation");
+      
+      // Implement exponential backoff for retries
+      if (retryCount < 3) {
+        const timeout = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+        }, timeout);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let mounted = true;
-
-    const fetchMenuItems = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/admin/navigation', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (!mounted) return;
-
-        // Create a Set to track unique IDs
-        const seenIds = new Set<string>();
-        const uniqueData = data.filter((item: NavigationMenu) => {
-          if (seenIds.has(item.id)) return false;
-          seenIds.add(item.id);
-          return true;
-        });
-
-        // Organize items into a hierarchy
-        const parentItems: NavigationMenu[] = [];
-        const childrenMap = new Map<string, NavigationMenu[]>();
-
-        uniqueData.forEach((item: NavigationMenu) => {
-          if (!item.parentId) {
-            parentItems.push(item);
-          } else {
-            if (!childrenMap.has(item.parentId)) {
-              childrenMap.set(item.parentId, []);
-            }
-            childrenMap.get(item.parentId)?.push(item);
-          }
-        });
-
-        // Sort parent items by order
-        parentItems.sort((a, b) => a.order - b.order);
-
-        // Add sorted children to their parents
-        parentItems.forEach((parent) => {
-          const children = childrenMap.get(parent.id);
-          if (children) {
-            children.sort((a, b) => a.order - b.order);
-            parent.children = children;
-          }
-        });
-
-        setMenuItems(parentItems);
-        setError(null);
-      } catch (err) {
-        if (mounted) {
-          console.error('Navigation fetch error:', err);
-          setError(err instanceof Error ? err.message : "Failed to fetch navigation");
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
     fetchMenuItems();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  }, [retryCount]); // Re-fetch when retryCount changes
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/admin/login' });
@@ -123,12 +125,18 @@ export default function AdminNavigation() {
         <div className="text-red-500 bg-red-50 p-4 rounded-lg">
           <p className="font-medium">Error loading navigation</p>
           <p className="text-sm mt-1">{error}</p>
+          {retryCount < 3 && (
+            <p className="text-sm mt-2">Retrying automatically...</p>
+          )}
         </div>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            setRetryCount(0); // Reset retry count
+            fetchMenuItems();
+          }}
           className="w-full px-4 py-2 text-sm text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
         >
-          Retry
+          Retry Manually
         </button>
       </div>
     );
