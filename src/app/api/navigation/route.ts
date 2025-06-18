@@ -8,6 +8,7 @@ export async function GET() {
     const menuItems = await prisma.navigationMenu.findMany({
       where: {
         isVisible: true,
+        menuType: "website",
       },
       orderBy: {
         order: "asc",

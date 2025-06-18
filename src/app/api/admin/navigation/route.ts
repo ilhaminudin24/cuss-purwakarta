@@ -6,15 +6,15 @@ import { authOptions } from "@/lib/auth";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
+    console.log("SESSION:", session);
 
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const menuItems = await prisma.navigationMenu.findMany({
-      orderBy: {
-        order: "asc",
-      },
+      where: { menuType: "admin" },
+      orderBy: { order: "asc" },
     });
 
     return NextResponse.json(menuItems);
@@ -33,9 +33,9 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, path, order, isVisible } = body;
+    const { title, path, order, isVisible, menuType } = body;
 
-    if (!title || !path) {
+    if (!title || !path || !menuType) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
         path,
         order: order || 0,
         isVisible: isVisible ?? true,
+        menuType,
       },
     });
 
