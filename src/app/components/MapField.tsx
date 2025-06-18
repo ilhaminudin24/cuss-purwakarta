@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { Controller } from "react-hook-form";
+import { Controller, Control } from "react-hook-form";
 import GoogleMapField from "./GoogleMapField";
 import { MapValue } from "../types/map";
 
@@ -14,7 +14,7 @@ const MapComponent = dynamic(() => import("./MapComponent"), {
 
 interface MapFieldProps {
   name: string;
-  control: any;
+  control: Control;
   label: string;
   required?: boolean;
 }

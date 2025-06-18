@@ -65,6 +65,22 @@ const STATIC_MARKERS = [
   }
 ];
 
+interface OverpassPlace {
+  id: string;
+  lat?: number;
+  lon?: number;
+  center?: {
+    lat: number;
+    lon: number;
+  };
+  tags?: {
+    name?: string;
+    amenity?: string;
+    shop?: string;
+    landuse?: string;
+  };
+}
+
 export default function MapComponent({
   value,
   onChange,
@@ -76,7 +92,7 @@ export default function MapComponent({
     value?.lng || 107.6329,
   ]);
   const [address, setAddress] = useState(value?.address || "");
-  const [overpassPlaces, setOverpassPlaces] = useState<any[]>([]);
+  const [overpassPlaces, setOverpassPlaces] = useState<OverpassPlace[]>([]);
 
   useEffect(() => {
     setMounted(true);
