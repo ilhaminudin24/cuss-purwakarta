@@ -27,6 +27,7 @@ export default function AdminNavigation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const fetchMenuItems = async () => {
     try {
@@ -42,9 +43,9 @@ export default function AdminNavigation() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(
-          errorData?.error || `HTTP error! status: ${response.status}`
-        );
+        const errorMessage = errorData?.error || `HTTP error! status: ${response.status}`;
+        console.error('Navigation fetch error details:', errorData);
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -87,6 +88,12 @@ export default function AdminNavigation() {
       setMenuItems(parentItems);
       setError(null);
       setRetryCount(0); // Reset retry count on success
+      
+      // Clear any existing retry timeout
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+        setRetryTimeout(null);
+      }
     } catch (err) {
       console.error('Navigation fetch error:', err);
       setError(err instanceof Error ? err.message : "Failed to fetch navigation");
@@ -94,9 +101,10 @@ export default function AdminNavigation() {
       // Implement exponential backoff for retries
       if (retryCount < 3) {
         const timeout = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           setRetryCount(prev => prev + 1);
         }, timeout);
+        setRetryTimeout(timeoutId);
       }
     } finally {
       setLoading(false);
@@ -105,9 +113,19 @@ export default function AdminNavigation() {
 
   useEffect(() => {
     fetchMenuItems();
+    
+    // Cleanup function to clear timeout
+    return () => {
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
   }, [retryCount]); // Re-fetch when retryCount changes
 
   const handleLogout = async () => {
+    if (retryTimeout) {
+      clearTimeout(retryTimeout);
+    }
     await signOut({ callbackUrl: '/admin/login' });
   };
 
