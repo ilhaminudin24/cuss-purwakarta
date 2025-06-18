@@ -18,7 +18,7 @@ export async function PATCH(
     }
 
     const { status } = await req.json();
-    const transaction = await prisma.Transaction.update({
+    const transaction = await prisma.transaction.update({
       where: { id: params.id },
       data: { status },
     });

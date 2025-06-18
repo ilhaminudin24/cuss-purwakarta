@@ -46,7 +46,7 @@ export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps)
       setMarker({ lat: value.lat, lng: value.lng });
       setAddress(value.address || "");
     }
-  }, [value]);
+  }, [value, marker.lat, marker.lng]);
 
   // Reverse geocode when marker changes
   const fetchAddress = useCallback((lat: number, lng: number) => {
