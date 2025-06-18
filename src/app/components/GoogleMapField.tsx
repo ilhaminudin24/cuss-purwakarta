@@ -29,9 +29,10 @@ const autocompleteOptions = {
 interface GoogleMapFieldProps {
   value?: MapValue;
   onChange?: (value: MapValue) => void;
+  readonly?: boolean;
 }
 
-export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps) {
+export default function GoogleMapField({ value, onChange, readonly = false }: GoogleMapFieldProps) {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: ["places"]
@@ -63,6 +64,7 @@ export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps)
   }, [onChange]);
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (readonly) return;
     if (e.latLng) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
@@ -72,6 +74,7 @@ export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps)
   };
 
   const handleMarkerDragEnd = (e: google.maps.MapMouseEvent) => {
+    if (readonly) return;
     if (e.latLng) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
@@ -85,6 +88,7 @@ export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps)
   };
 
   const onPlaceChanged = () => {
+    if (readonly) return;
     if (autocomplete) {
       const place = autocomplete.getPlace();
       if (place.geometry && place.geometry.location) {
@@ -115,31 +119,38 @@ export default function GoogleMapField({ value, onChange }: GoogleMapFieldProps)
 
   return (
     <div className="space-y-2">
-      <Autocomplete
-        onLoad={onLoadAutocomplete}
-        onPlaceChanged={onPlaceChanged}
-        options={autocompleteOptions}
-      >
-        <input
-          type="text"
-          placeholder="Cari alamat atau tempat..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </Autocomplete>
+      {!readonly && (
+        <Autocomplete
+          onLoad={onLoadAutocomplete}
+          onPlaceChanged={onPlaceChanged}
+          options={autocompleteOptions}
+        >
+          <input
+            type="text"
+            placeholder="Cari alamat atau tempat..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </Autocomplete>
+      )}
       <GoogleMap
         mapContainerStyle={{ width: "100%", height: "400px" }}
         center={marker}
         zoom={DEFAULT_ZOOM}
         onClick={handleMapClick}
         onLoad={map => { mapRef.current = map; }}
+        options={{
+          gestureHandling: readonly ? "cooperative" : "auto",
+          streetViewControl: !readonly,
+          mapTypeControl: !readonly,
+          zoomControl: !readonly,
+        }}
       >
         {/* User marker */}
         <Marker
           position={marker}
-          draggable={true}
+          draggable={!readonly}
           onDragEnd={handleMarkerDragEnd}
         />
-    
       </GoogleMap>
       <div className="text-sm text-gray-600">
         <p className="font-medium">Alamat terpilih:</p>

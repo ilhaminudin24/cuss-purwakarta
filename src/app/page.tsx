@@ -12,6 +12,7 @@ interface BookingFormField {
   name: string;
   type: string;
   required: boolean;
+  readonly: boolean;
   position: number;
   options?: string[];
   isActive: boolean;
@@ -150,7 +151,9 @@ export default function Home() {
                     {...rhfField}
                     checked={!!rhfField.value}
                     required={field.required}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    readOnly={field.readonly}
+                    disabled={field.readonly}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
                   />
                 );
               }
@@ -159,14 +162,21 @@ export default function Home() {
                   <textarea
                     {...rhfField}
                     required={field.required}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    readOnly={field.readonly}
+                    disabled={field.readonly}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:bg-gray-100"
                     rows={3}
                   />
                 );
               }
               if (field.type === "select") {
                 return (
-                  <select {...rhfField} required={field.required} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                  <select 
+                    {...rhfField} 
+                    required={field.required}
+                    disabled={field.readonly}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:bg-gray-100"
+                  >
                     {field.options?.map(option => (
                       <option key={option} value={option}>{option}</option>
                     ))}
@@ -179,7 +189,9 @@ export default function Home() {
                   type={field.type}
                   {...rhfField}
                   required={field.required}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  readOnly={field.readonly}
+                  disabled={field.readonly}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:bg-gray-100"
                 />
               );
             }}
@@ -192,6 +204,7 @@ export default function Home() {
             control={control}
             label={field.label}
             required={field.required}
+            readonly={field.readonly}
           />
         );
       default:
