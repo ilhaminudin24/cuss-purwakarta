@@ -20,6 +20,10 @@ const adminMenuItems = [
   { title: "Menu", path: "/admin/navigation", order: 4, isVisible: true, menuType: "admin" },
   { title: "Pengguna", path: "/admin/users", order: 5, isVisible: true, menuType: "admin" },
   { title: "Form Pemesanan", path: "/admin/booking-form", order: 6, isVisible: true, menuType: "admin" },
+  { title: "Cara Pesan", path: "/admin/how-to-order", order: 7, isVisible: true, menuType: "admin" },
+  { title: "Testimoni", path: "/admin/testimonials", order: 8, isVisible: true, menuType: "admin" },
+  { title: "Tentang", path: "/admin/about", order: 9, isVisible: true, menuType: "admin" },
+  { title: "Kontak", path: "/admin/contact", order: 10, isVisible: true, menuType: "admin" },
 ];
 
 export async function POST() {

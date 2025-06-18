@@ -1,42 +1,39 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 
-interface Testimonial {
+interface AboutContent {
   id: string;
-  name: string;
-  role: string;
+  title: string;
   content: string;
-  position: number;
   isActive: boolean;
 }
 
-export default function TestimonialsPage() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+export default function AboutPage() {
+  const [contents, setContents] = useState<AboutContent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [editingContent, setEditingContent] = useState<AboutContent | null>(null);
   const [formData, setFormData] = useState({
-    name: "",
-    role: "",
+    title: "",
     content: "",
     isActive: true,
   });
 
   useEffect(() => {
-    fetchTestimonials();
+    fetchContents();
   }, []);
 
-  const fetchTestimonials = async () => {
+  const fetchContents = async () => {
     try {
-      const response = await fetch("/api/admin/testimonials");
-      if (!response.ok) throw new Error("Failed to fetch testimonials");
+      const response = await fetch("/api/admin/about");
+      if (!response.ok) throw new Error("Failed to fetch about content");
       const data = await response.json();
-      setTestimonials(data);
+      setContents(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch testimonials");
+      setError(err instanceof Error ? err.message : "Failed to fetch about content");
     } finally {
       setIsLoading(false);
     }
@@ -45,10 +42,10 @@ export default function TestimonialsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingTestimonial
-        ? `/api/admin/testimonials/${editingTestimonial.id}`
-        : "/api/admin/testimonials";
-      const method = editingTestimonial ? "PUT" : "POST";
+      const url = editingContent
+        ? `/api/admin/about/${editingContent.id}`
+        : "/api/admin/about";
+      const method = editingContent ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -58,78 +55,46 @@ export default function TestimonialsPage() {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to save testimonial");
+      if (!response.ok) throw new Error("Failed to save about content");
 
-      await fetchTestimonials();
+      await fetchContents();
       handleCloseModal();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save testimonial");
+      setError(err instanceof Error ? err.message : "Failed to save about content");
     }
   };
 
-  const handleEdit = (testimonial: Testimonial) => {
+  const handleEdit = (content: AboutContent) => {
     setFormData({
-      name: testimonial.name,
-      role: testimonial.role,
-      content: testimonial.content,
-      isActive: testimonial.isActive,
+      title: content.title,
+      content: content.content,
+      isActive: content.isActive,
     });
-    setEditingTestimonial(testimonial);
+    setEditingContent(content);
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this testimonial?")) return;
+    if (!confirm("Are you sure you want to delete this content?")) return;
 
     try {
-      const response = await fetch(`/api/admin/testimonials/${id}`, {
+      const response = await fetch(`/api/admin/about/${id}`, {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete testimonial");
+      if (!response.ok) throw new Error("Failed to delete content");
 
-      await fetchTestimonials();
+      await fetchContents();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete testimonial");
-    }
-  };
-
-  const handleMove = async (testimonial: Testimonial, direction: "up" | "down") => {
-    try {
-      const currentIndex = testimonials.findIndex((t) => t.id === testimonial.id);
-      if (
-        (direction === "up" && currentIndex === 0) ||
-        (direction === "down" && currentIndex === testimonials.length - 1)
-      )
-        return;
-
-      const newPosition =
-        direction === "up"
-          ? testimonials[currentIndex - 1].position
-          : testimonials[currentIndex + 1].position;
-
-      const response = await fetch(`/api/admin/testimonials/${testimonial.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ...testimonial, position: newPosition }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update testimonial position");
-
-      await fetchTestimonials();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update position");
+      setError(err instanceof Error ? err.message : "Failed to delete content");
     }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setEditingTestimonial(null);
+    setEditingContent(null);
     setFormData({
-      name: "",
-      role: "",
+      title: "",
       content: "",
       isActive: true,
     });
@@ -146,13 +111,13 @@ export default function TestimonialsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Testimonials Management</h1>
+        <h1 className="text-2xl font-bold">About Page Management</h1>
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           <Plus size={20} />
-          Add Testimonial
+          Add Content
         </button>
       </div>
 
@@ -167,13 +132,7 @@ export default function TestimonialsPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Position
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Role
+                Title
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Content
@@ -187,58 +146,36 @@ export default function TestimonialsPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {testimonials.map((testimonial) => (
-              <tr key={testimonial.id}>
+            {contents.map((content) => (
+              <tr key={content.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleMove(testimonial, "up")}
-                      className="text-gray-400 hover:text-gray-600"
-                      disabled={testimonials.indexOf(testimonial) === 0}
-                    >
-                      <ArrowUp size={16} />
-                    </button>
-                    <span className="text-sm text-gray-900">{testimonial.position}</span>
-                    <button
-                      onClick={() => handleMove(testimonial, "down")}
-                      className="text-gray-400 hover:text-gray-600"
-                      disabled={testimonials.indexOf(testimonial) === testimonials.length - 1}
-                    >
-                      <ArrowDown size={16} />
-                    </button>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{testimonial.name}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{testimonial.role}</div>
+                  <div className="text-sm text-gray-900">{content.title}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm text-gray-900 truncate max-w-xs">
-                    {testimonial.content}
+                    {content.content}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      testimonial.isActive
+                      content.isActive
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
                     }`}
                   >
-                    {testimonial.isActive ? "Active" : "Inactive"}
+                    {content.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
-                    onClick={() => handleEdit(testimonial)}
+                    onClick={() => handleEdit(content)}
                     className="text-blue-600 hover:text-blue-900 mr-4"
                   >
                     <Pencil size={18} />
                   </button>
                   <button
-                    onClick={() => handleDelete(testimonial.id)}
+                    onClick={() => handleDelete(content.id)}
                     className="text-red-600 hover:text-red-900"
                   >
                     <Trash2 size={18} />
@@ -254,40 +191,22 @@ export default function TestimonialsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
-              {editingTestimonial ? "Edit Testimonial" : "Add New Testimonial"}
+              {editingContent ? "Edit Content" : "Add New Content"}
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label
-                  htmlFor="name"
+                  htmlFor="title"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  Name
+                  Title
                 </label>
                 <input
                   type="text"
-                  id="name"
-                  value={formData.name}
+                  id="title"
+                  value={formData.title}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Role
-                </label>
-                <input
-                  type="text"
-                  id="role"
-                  value={formData.role}
-                  onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value })
+                    setFormData({ ...formData, title: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
@@ -306,7 +225,7 @@ export default function TestimonialsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, content: e.target.value })
                   }
-                  rows={4}
+                  rows={6}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -336,7 +255,7 @@ export default function TestimonialsPage() {
                   type="submit"
                   className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
-                  {editingTestimonial ? "Update" : "Create"}
+                  {editingContent ? "Update" : "Create"}
                 </button>
               </div>
             </form>
