@@ -7,7 +7,7 @@ import * as Icons from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { FaUser, FaSignOutAlt } from "react-icons/fa";
-import { prisma } from "@/lib/prisma";
+import { getAdminNavigation } from "@/lib/navigation";
 
 interface NavigationMenu {
   id: string;
@@ -34,20 +34,7 @@ export default function AdminNavigation() {
     const fetchMenuItems = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/admin/navigation/init", {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-
-        if (response.ok === false) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to fetch navigation: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await getAdminNavigation();
 
         if (!mounted) return;
 
@@ -96,7 +83,6 @@ export default function AdminNavigation() {
       } finally {
         if (mounted) {
           setLoading(false);
-          await prisma.$disconnect();
         }
       }
     };
