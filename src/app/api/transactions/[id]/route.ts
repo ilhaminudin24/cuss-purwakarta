@@ -30,4 +30,8 @@ export async function PATCH(
       { status: 500 }
     );
   }
+}
+
+export async function GET(_req: NextRequest) {
+  // ... rest of the code
 } 
