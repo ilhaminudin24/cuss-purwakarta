@@ -21,7 +21,7 @@ const fields = [
   {
     label: "Lokasi Jemput",
     name: "pickup",
-    type: "text",
+    type: "map",
     required: true,
     isActive: true,
     position: 3,
@@ -29,7 +29,7 @@ const fields = [
   {
     label: "Tujuan",
     name: "destination",
-    type: "text",
+    type: "map",
     required: true,
     isActive: true,
     position: 4,
@@ -61,14 +61,18 @@ const fields = [
 ];
 
 async function seed() {
-  for (const field of fields) {
-    const res = await fetch("http://localhost:3000/api/admin/booking-form-fields", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(field),
-    });
-    const data = await res.json();
-    console.log(`Added: ${field.label}`, data);
+  try {
+    for (const field of fields) {
+      const res = await fetch("http://localhost:3000/api/admin/booking-form-fields", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(field),
+      });
+      const data = await res.json();
+      console.log(`Added: ${field.label}`, data);
+    }
+  } catch (error) {
+    console.error("Error seeding data:", error);
   }
 }
 

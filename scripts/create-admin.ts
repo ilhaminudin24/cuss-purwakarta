@@ -1,39 +1,42 @@
-const { PrismaClient } = require('@prisma/client');
-const { hash } = require('bcrypt');
+import { prisma } from '../src/lib/prisma';
 
-const prisma = new PrismaClient();
+const websiteTitles = [
+  'Beranda',
+  'Layanan',
+  'Cara Pesan',
+  'Testimoni',
+  'FAQ',
+  'Tentang',
+  'Kontak',
+];
 
-async function main() {
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
+const adminTitles = [
+  'Services',
+  'FAQs',
+  'Navigation',
+  'Users',
+  'Booking-Form',
+];
 
-  if (!email || !password) {
-    console.error("Please provide ADMIN_EMAIL and ADMIN_PASSWORD environment variables");
-    process.exit(1);
-  }
+async function updateMenuTypes() {
+  // Update website menu items
+  await prisma.navigationMenu.updateMany({
+    where: { title: { in: websiteTitles } },
+    data: { menuType: 'website' },
+  });
 
-  try {
-    const hashedPassword = await hash(password, 12);
+  // Update admin menu items
+  await prisma.navigationMenu.updateMany({
+    where: { title: { in: adminTitles } },
+    data: { menuType: 'admin' },
+  });
 
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {
-        password: hashedPassword,
-      },
-      create: {
-        email,
-        password: hashedPassword,
-        name: "Admin",
-      },
-    });
-
-    console.log("Admin user created:", user.email);
-  } catch (error) {
-    console.error("Error creating admin user:", error);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
-  }
+  console.log('Menu types updated successfully.');
+  await prisma.$disconnect();
 }
 
-main(); 
+updateMenuTypes().catch((e) => {
+  console.error(e);
+  prisma.$disconnect();
+  process.exit(1);
+}); 

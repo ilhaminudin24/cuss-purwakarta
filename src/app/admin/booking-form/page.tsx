@@ -41,6 +41,7 @@ export default function BookingFormFieldsPage() {
     { value: "textarea", label: "Text Area" },
     { value: "select", label: "Select" },
     { value: "checkbox", label: "Checkbox" },
+    { value: "map", label: "Map" },
   ];
 
   const handleTypeChange = (type: string) => {
