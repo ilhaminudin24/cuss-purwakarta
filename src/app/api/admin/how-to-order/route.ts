@@ -1,61 +1,66 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const steps = await prisma.orderStep.findMany({
-      orderBy: { position: "asc" },
+      orderBy: {
+        position: "asc",
+      },
     });
 
     return NextResponse.json(steps);
   } catch (error) {
-    console.error("[HOW_TO_ORDER_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error("Error fetching order steps:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch order steps" },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { title, description, icon, isActive } = body;
-
-    if (!title || !description || !icon) {
-      return new NextResponse("Missing required fields", { status: 400 });
-    }
+    const data = await request.json();
+    const { title, description, icon, isActive } = data;
 
     // Get the highest position
     const lastStep = await prisma.orderStep.findFirst({
-      orderBy: { position: "desc" },
+      orderBy: {
+        position: "desc",
+      },
     });
-    const position = lastStep ? lastStep.position + 1 : 0;
+
+    const newPosition = lastStep ? lastStep.position + 1 : 1;
 
     const step = await prisma.orderStep.create({
       data: {
         title,
         description,
         icon,
-        position,
-        isActive: isActive ?? true,
+        isActive,
+        position: newPosition,
       },
     });
 
     return NextResponse.json(step);
   } catch (error) {
-    console.error("[HOW_TO_ORDER_POST]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error("Error creating order step:", error);
+    return NextResponse.json(
+      { error: "Failed to create order step" },
+      { status: 500 }
+    );
   }
 } 

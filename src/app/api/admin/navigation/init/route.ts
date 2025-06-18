@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const defaultMenuItems = [
   { title: "Beranda", path: "/", order: 1, isVisible: true, menuType: "website" },
@@ -25,6 +26,9 @@ const adminMenuItems = [
   { title: "Tentang", path: "/admin/about", order: 9, isVisible: true, menuType: "admin" },
   { title: "Kontak", path: "/admin/contact", order: 10, isVisible: true, menuType: "admin" },
 ];
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST() {
   try {
@@ -55,5 +59,43 @@ export async function POST() {
   } catch (error) {
     console.error("[NAVIGATION_INIT]", error);
     return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Fetch all admin menu items
+    const menuItems = await prisma.navigationMenu.findMany({
+      where: {
+        menuType: "admin",
+        isVisible: true,
+      },
+      orderBy: {
+        order: "asc",
+      },
+      distinct: ['id'], // Ensure no duplicates
+    });
+
+    const response = NextResponse.json(menuItems);
+    
+    // Set cache control headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Surrogate-Control', 'no-store');
+
+    return response;
+  } catch (error) {
+    console.error("Error fetching admin navigation:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch navigation" },
+      { status: 500 }
+    );
   }
 } 
