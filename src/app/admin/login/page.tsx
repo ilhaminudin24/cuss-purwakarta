@@ -1,19 +1,38 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
-export default function LoginPage() {
+// Create a separate component for the login form
+function LoginForm() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/admin";
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
+
+  // Debug logs
+  useEffect(() => {
+    console.log("Session status:", status);
+    console.log("Session data:", session);
+  }, [session, status]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (status === 'authenticated') {
+      console.log("User is authenticated, redirecting to /admin");
+      router.push('/admin');
+      router.refresh();
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,21 +44,40 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
 
     try {
+      console.log("Attempting sign in...");
       const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
+        callbackUrl
       });
 
+      console.log("Sign in result:", result);
+
       if (result?.error) {
-        setError("Invalid email or password");
+        if (result.error === "Invalid credentials") {
+          setError("Email atau password salah. Silakan coba lagi.");
+        } else if (result.error === "Missing credentials") {
+          setError("Mohon isi email dan password.");
+        } else {
+          setError("Gagal masuk. " + result.error);
+        }
         return;
       }
 
-      router.push("/admin");
-      router.refresh();
+      if (result?.ok) {
+        console.log("Login successful, redirecting...");
+        // Try multiple redirection methods
+        window.location.href = '/admin';
+        // Fallback redirections
+        setTimeout(() => {
+          router.push('/admin');
+          router.refresh();
+        }, 100);
+      }
     } catch (error) {
-      setError("An error occurred. Please try again.");
+      console.error("Login error:", error);
+      setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -120,7 +158,9 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
           )}
 
           <div>
@@ -129,7 +169,17 @@ export default function LoginPage() {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sedang Masuk...
+                </>
+              ) : (
+                "Masuk"
+              )}
             </button>
           </div>
         </form>
@@ -180,5 +230,18 @@ export default function LoginPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Main page component with Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 } 

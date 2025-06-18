@@ -49,7 +49,11 @@ export const authOptions: NextAuthOptions = {
             }
           });
 
-          if (!user || !user?.password) {
+          if (!user) {
+            throw new Error("Invalid credentials");
+          }
+
+          if (!user.password) {
             throw new Error("Invalid credentials");
           }
 
