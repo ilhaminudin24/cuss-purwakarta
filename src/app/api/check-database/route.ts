@@ -10,10 +10,8 @@ export async function GET() {
     // Extract database name from connection string
     const dbName = databaseUrl.match(/\/\/([^?]+)\?/)?.[1]?.split('/')?.[1] || 'unknown';
     
-    // Test connection by counting users
-    const userCount = await prisma.user.count();
-    const serviceCount = await prisma.service.count();
-    const faqCount = await prisma.fAQ.count();
+    // Test connection by running a simple, fast query
+    await (prisma as any).$queryRaw`SELECT 1`;
     
     // Determine if this is development or production
     const isDevelopment = dbName.includes('dev') || dbName.includes('development') || nodeEnv === 'development';
@@ -27,10 +25,7 @@ export async function GET() {
         isDevelopment: isDevelopment
       },
       connection: {
-        status: 'Connected',
-        userCount,
-        serviceCount,
-        faqCount
+        status: 'Connected'
       },
       timestamp: new Date().toISOString()
     });
