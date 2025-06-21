@@ -139,9 +139,6 @@ export default function Home() {
     }
   };
 
-  // Debug: log fields before rendering the booking form modal
-  console.log('BookingForm fields passed to MultiStepBookingForm:', fields);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
