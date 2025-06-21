@@ -24,6 +24,8 @@ interface Transaction {
   notes: string | null;
   status: string;
   dynamicFields: Record<string, any> | null;
+  latitude?: number;
+  longitude?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -196,6 +198,7 @@ export default function TransactionsPage() {
               <th className="px-4 py-2 border">Service</th>
               <th className="px-4 py-2 border">Pickup</th>
               <th className="px-4 py-2 border">Destination</th>
+              <th className="px-4 py-2 border">Location</th>
               <th className="px-4 py-2 border">Distance</th>
               <th className="px-4 py-2 border">Status</th>
               {formFields.map(field => (
@@ -233,6 +236,20 @@ export default function TransactionsPage() {
                 <td className="px-4 py-2 border">{transaction.service}</td>
                 <td className="px-4 py-2 border">{transaction.pickup.address}</td>
                 <td className="px-4 py-2 border">{transaction.destination.address}</td>
+                <td className="px-4 py-2 border text-center">
+                  {transaction.latitude && transaction.longitude ? (
+                    <a
+                      href={`https://www.google.com/maps?q=${transaction.latitude},${transaction.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600"
+                    >
+                      View on Map
+                    </a>
+                  ) : (
+                    '-'
+                  )}
+                </td>
                 <td className="px-4 py-2 border">{transaction.distance.toFixed(2)} km</td>
                 <td className="px-4 py-2 border">{transaction.status}</td>
                 {formFields.map(field => {
