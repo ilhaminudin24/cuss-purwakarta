@@ -87,4 +87,58 @@ async function updateFields() {
   }
 }
 
-updateFields(); 
+async function updateFormFields() {
+  try {
+    // Check if distance field exists
+    const existingField = await prisma.bookingFormField.findFirst({
+      where: {
+        name: 'distance'
+      }
+    });
+
+    if (!existingField) {
+      // Add distance field if it doesn't exist
+      await prisma.bookingFormField.create({
+        data: {
+          label: 'Distance',
+          name: 'distance',
+          type: 'number',
+          required: false,
+          readonly: true,
+          position: 999, // High position number to put it at the end
+          options: [],
+          isActive: true,
+          autoCalculate: {
+            type: "distance",
+            from: "pickup",
+            to: "destination"
+          }
+        }
+      });
+      console.log('Successfully added distance field');
+    } else {
+      // Update existing distance field
+      await prisma.bookingFormField.update({
+        where: {
+          id: existingField.id
+        },
+        data: {
+          readonly: true,
+          autoCalculate: {
+            type: "distance",
+            from: "pickup",
+            to: "destination"
+          }
+        }
+      });
+      console.log('Successfully updated distance field');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+updateFields();
+updateFormFields(); 

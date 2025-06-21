@@ -22,6 +22,7 @@ export default function NavigationPage() {
     path: "",
     order: 0,
     isVisible: true,
+    menuType: "admin",
   });
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -73,6 +74,7 @@ export default function NavigationPage() {
       path: item.path,
       order: item.order,
       isVisible: item.isVisible,
+      menuType: "admin",
     });
     setEditingId(item.id);
     setIsEditing(true);
@@ -171,6 +173,7 @@ export default function NavigationPage() {
       path: "",
       order: 0,
       isVisible: true,
+      menuType: "admin",
     });
   };
 

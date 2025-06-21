@@ -11,9 +11,13 @@
     "postinstall": "prisma generate"
   },
   "eslintConfig": {
-    "extends": ["next/core-web-vitals"],
+    "extends": [
+      "next/core-web-vitals"
+    ],
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "root": true
   },
   "dependencies": {
@@ -27,6 +31,7 @@
     "@react-google-maps/api": "^2.20.6",
     "@types/bcrypt": "^5.0.0",
     "@types/leaflet": "^1.9.18",
+    "@types/react-beautiful-dnd": "^13.1.8",
     "bcrypt": "^5.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -40,6 +45,7 @@
     "node-fetch": "^3.3.2",
     "prisma": "^6.10.0",
     "react": "^18",
+    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18",
     "react-hook-form": "^7.57.0",
     "react-icons": "^4.12.0",
