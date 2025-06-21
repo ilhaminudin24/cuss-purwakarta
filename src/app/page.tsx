@@ -53,14 +53,19 @@ export default function Home() {
       }
       const data = await response.json();
       
+      // Filter out duplicate fields by name
+      const uniqueFields = data.filter((field: BookingFormField, index: number, self: BookingFormField[]) =>
+        index === self.findIndex((f) => f.name === field.name)
+      );
+
       // Find the service field to get available services
-      const serviceField = data.find((field: BookingFormField) => field.name === 'service');
+      const serviceField = uniqueFields.find((field: BookingFormField) => field.name === 'service');
       if (serviceField && serviceField.options && serviceField.options.length > 0) {
         // Set the first service as default selected service
         setSelectedService(serviceField.options[0]);
       }
       
-      setFields(data);
+      setFields(uniqueFields);
       setError(null);
     } catch (error) {
       console.error('Error fetching fields:', error);
@@ -106,50 +111,24 @@ export default function Home() {
       // Start with basic message
       let messageLines = ['Halo Admin, saya ingin melakukan pemesanan:'];
 
-      // Add standard fields first
-      const standardFields = [
-        { name: 'name', label: 'Nama' },
-        { name: 'whatsapp', label: 'WhatsApp' },
-        { name: 'service', label: 'Layanan' },
-        { name: 'pickup', label: 'Lokasi Jemput' },
-        { name: 'destination', label: 'Tujuan' },
-        { name: 'distance', label: 'Jarak' }
-      ];
-
-      standardFields.forEach(({ name, label }) => {
-        let value = data[name];
+      // Add dynamic fields
+      fields.forEach(field => {
+        let value = data[field.name];
         
         // Format the value based on field type
-        if (name === 'pickup' || name === 'destination') {
+        if (field.type === 'map') {
           value = value?.address || '-';
-        } else if (name === 'distance') {
+        } else if (field.type === 'distance') {
           value = value ? value.toFixed(2) + ' km' : '-';
-        } else if (value === undefined || value === null) {
+        } else if (field.type === 'checkbox') {
+          value = value ? 'Ya' : 'Tidak';
+        } else if (field.type === 'number') {
+          value = value ? value.toFixed(2) : '-';
+        } else if (value === undefined || value === null || value === '') {
           value = '-';
         }
 
-        messageLines.push(`${label}: ${value}`);
-      });
-
-      // Add dynamic fields
-      fields.forEach(field => {
-        // Skip standard fields that are already added
-        if (!standardFields.some(sf => sf.name === field.name)) {
-          let value = data[field.name];
-          
-          // Format the value based on field type
-          if (field.type === 'map') {
-            value = value?.address || '-';
-          } else if (field.type === 'checkbox') {
-            value = value ? 'Ya' : 'Tidak';
-          } else if (field.type === 'number') {
-            value = value ? value.toFixed(2) : '-';
-          } else if (value === undefined || value === null) {
-            value = '-';
-          }
-
-          messageLines.push(`${field.label}: ${value}`);
-        }
+        messageLines.push(`${field.label}: ${value}`);
       });
 
       const message = messageLines.join('\n');

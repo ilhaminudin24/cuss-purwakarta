@@ -1,11 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 
 const prismaClientSingleton = () => {
+  // Use development database URL when in development mode
+  const databaseUrl = process.env.NODE_ENV === "development" 
+    ? process.env.DATABASE_URL 
+    : process.env.DATABASE_URL;
+
   return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? [] : ["error"],
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL
+        url: databaseUrl
       },
     },
   }).$extends({

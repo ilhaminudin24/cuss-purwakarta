@@ -48,6 +48,7 @@ export default function TransactionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -63,12 +64,14 @@ export default function TransactionsPage() {
   }, [currentPage]);
 
   const fetchTransactions = async (page: number) => {
+    setLoading(true);
     try {
       const response = await fetch(`/api/transactions?page=${page}&limit=10`);
       if (!response.ok) throw new Error('Failed to fetch transactions');
       const data = await response.json();
       setTransactions(data.transactions);
       setTotalPages(data.totalPages);
+      setSelectedIds([]); // Reset selection on page change
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -88,6 +91,56 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(transactions.map(t => t.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      try {
+        const response = await fetch('/api/transactions', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: [id] }),
+        });
+        if (!response.ok) throw new Error('Failed to delete transaction');
+        await fetchTransactions(currentPage); // Refresh data
+      } catch (err) {
+        alert('Error: ' + (err instanceof Error ? err.message : 'An error occurred'));
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      alert('Please select transactions to delete.');
+      return;
+    }
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} transactions?`)) {
+      try {
+        const response = await fetch('/api/transactions', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selectedIds }),
+        });
+        if (!response.ok) throw new Error('Failed to delete transactions');
+        await fetchTransactions(currentPage); // Refresh data
+      } catch (err) {
+        alert('Error: ' + (err instanceof Error ? err.message : 'An error occurred'));
+      }
+    }
+  };
+
   const formatValue = (value: any, type: string) => {
     if (value === null || value === undefined) return '-';
     if (type === 'checkbox') return value ? 'Yes' : 'No';
@@ -96,7 +149,7 @@ export default function TransactionsPage() {
     return value.toString();
   };
 
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -114,11 +167,29 @@ export default function TransactionsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Transactions</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {selectedIds.length > 0 && (
+          <button
+            onClick={handleBulkDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Delete Selected ({selectedIds.length})
+          </button>
+        )}
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
+              <th className="px-4 py-2 border">
+                <input
+                  type="checkbox"
+                  onChange={handleSelectAll}
+                  checked={selectedIds.length > 0 && selectedIds.length === transactions.length}
+                />
+              </th>
+              <th className="px-4 py-2 border">Actions</th>
               <th className="px-4 py-2 border">Date</th>
               <th className="px-4 py-2 border">Name</th>
               <th className="px-4 py-2 border">WhatsApp</th>
@@ -138,7 +209,22 @@ export default function TransactionsPage() {
           </thead>
           <tbody>
             {transactions.map((transaction) => (
-              <tr key={transaction.id} className="hover:bg-gray-50">
+              <tr key={transaction.id} className={`hover:bg-gray-50 ${selectedIds.includes(transaction.id) ? 'bg-blue-50' : ''}`}>
+                <td className="px-4 py-2 border">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(transaction.id)}
+                    onChange={() => handleSelect(transaction.id)}
+                  />
+                </td>
+                <td className="px-4 py-2 border">
+                  <button
+                    onClick={() => handleDelete(transaction.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </button>
+                </td>
                 <td className="px-4 py-2 border">
                   {new Date(transaction.createdAt).toLocaleDateString()}
                 </td>

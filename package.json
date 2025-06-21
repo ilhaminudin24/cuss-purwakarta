@@ -8,7 +8,22 @@
     "start": "next start",
     "lint": "next lint",
     "create-admin": "ts-node -T scripts/create-admin.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:push:dev": "node scripts/prisma-dev.js db push",
+    "db:seed:dev": "node scripts/seed-dev-database.js",
+    "db:reset:dev": "node scripts/reset-dev-database.js",
+    "db:setup:dev": "node scripts/setup-dev-database.js",
+    "db:migrate:dev": "node scripts/migrate-to-dev.js",
+    "db:studio": "prisma studio",
+    "db:studio:dev": "node scripts/prisma-dev.js studio",
+    "setup:dev": "node scripts/quick-setup.js",
+    "check:db": "node scripts/check-database.js",
+    "fix:db": "node scripts/fix-database-url.js",
+    "check:env": "node scripts/check-env-files.js",
+    "fix:env": "node scripts/fix-env-conflict.js",
+    "setup:migration": "node scripts/setup-production-migration.js"
   },
   "eslintConfig": {
     "extends": [
