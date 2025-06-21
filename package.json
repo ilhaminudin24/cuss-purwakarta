@@ -23,7 +23,8 @@
     "fix:db": "node scripts/fix-database-url.js",
     "check:env": "node scripts/check-env-files.js",
     "fix:env": "node scripts/fix-env-conflict.js",
-    "setup:migration": "node scripts/setup-production-migration.js"
+    "setup:migration": "node scripts/setup-production-migration.js",
+    "push:prod": "node scripts/push-to-production.js"
   },
   "eslintConfig": {
     "extends": [

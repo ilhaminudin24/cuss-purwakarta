@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
       subscription,
       notes,
       status,
+      latitude,
+      longitude,
       ...dynamicFields
     } = data;
 
@@ -53,6 +55,8 @@ export async function POST(req: NextRequest) {
       subscription: Boolean(subscription),
       notes: notes || null,
       status: status || "pending",
+      latitude: latitude ? (typeof latitude === 'number' ? latitude : parseFloat(latitude)) : null,
+      longitude: longitude ? (typeof longitude === 'number' ? longitude : parseFloat(longitude)) : null,
       dynamicFields: Object.keys(dynamicFields).length > 0 ? dynamicFields : null
     };
 
