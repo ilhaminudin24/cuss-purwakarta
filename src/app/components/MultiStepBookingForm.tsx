@@ -454,32 +454,6 @@ export default function MultiStepBookingForm({
             </button>
           </div>
 
-          {/* GPS Status Indicator */}
-          <div className="px-6 py-2 bg-gray-50 border-b border-gray-200">
-            <div className="flex items-center text-xs text-gray-600">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              {locationPermission === 'pending' && (
-                <span className="flex items-center">
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500 mr-2"></div>
-                  Getting your location...
-                </span>
-              )}
-              {locationPermission === 'granted' && gpsLocation && (
-                <span className="text-green-600">
-                  ✓ Location captured ({gpsLocation.latitude.toFixed(4)}, {gpsLocation.longitude.toFixed(4)})
-                </span>
-              )}
-              {locationPermission === 'denied' && (
-                <span className="text-orange-600">
-                  ⚠ Location access denied - order will continue without GPS
-                </span>
-              )}
-            </div>
-          </div>
-
           {/* Form */}
           <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 overflow-y-auto">
             <div className="px-6 py-4">
