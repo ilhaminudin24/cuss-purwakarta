@@ -20,6 +20,7 @@ const adminMenuItems = [
   { title: "Menu", path: "/admin/navigation", order: 4, isVisible: true, menuType: "admin" },
   { title: "Pengguna", path: "/admin/users", order: 5, isVisible: true, menuType: "admin" },
   { title: "Form Pemesanan", path: "/admin/booking-form", order: 6, isVisible: true, menuType: "admin" },
+  { title: "Konfigurasi Layanan", path: "/admin/service-settings", order: 7, isVisible: true, menuType: "admin" },
 ];
 
 export async function GET() {

@@ -10,40 +10,52 @@ export async function POST(req: NextRequest) {
     // Log received data for debugging
     console.log('Received form data:', JSON.stringify(data, null, 2));
 
-    // Validate required fields
-    if (!data.name || !data.service || !data.pickup || !data.destination || !data.distance) {
-      console.error('Missing required fields:', {
-        name: !data.name,
-        service: !data.service,
-        pickup: !data.pickup,
-        destination: !data.destination,
-        distance: !data.distance
-      });
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
+    // Validate location format if pickup/destination are present
+    const validateLocation = (location: any) => {
+      return (
+        location &&
+        typeof location === 'object' &&
+        typeof location.lat === 'number' &&
+        typeof location.lng === 'number' &&
+        typeof location.address === 'string'
       );
-    }
+    };
 
-    // Ensure pickup and destination are valid JSON objects
-    const pickup = typeof data.pickup === 'string' ? JSON.parse(data.pickup) : data.pickup;
-    const destination = typeof data.destination === 'string' ? JSON.parse(data.destination) : data.destination;
+    // Prepare default location object for required fields
+    const defaultLocation = {
+      lat: 0,
+      lng: 0,
+      address: ''
+    };
 
-    // Log the data we're about to save
-    const transactionData = {
-      name: data.name,
-      whatsapp: data.whatsapp || null,
-      service: data.service,
+    // Separate base fields from dynamic fields
+    const {
+      name,
+      whatsapp,
+      service,
       pickup,
       destination,
-      distance: typeof data.distance === 'string' ? parseFloat(data.distance) : data.distance,
-      subscription: Boolean(data.subscription),
-      notes: data.notes || null,
-      status: "pending"
-    };
-    console.log('Creating transaction with data:', transactionData);
+      distance,
+      subscription,
+      notes,
+      status,
+      ...dynamicFields
+    } = data;
 
-    // Create the transaction record
+    // Create the transaction record with required fields
+    const transactionData = {
+      name: name || 'Anonymous',
+      whatsapp: whatsapp || null,
+      service: service || 'Unknown',
+      pickup: validateLocation(pickup) ? pickup : defaultLocation,
+      destination: validateLocation(destination) ? destination : defaultLocation,
+      distance: distance ? (typeof distance === 'number' ? distance : parseFloat(distance)) : 0,
+      subscription: Boolean(subscription),
+      notes: notes || null,
+      status: status || "pending",
+      dynamicFields: Object.keys(dynamicFields).length > 0 ? dynamicFields : null
+    };
+
     try {
       const result = await prisma.transaction.create({
         data: transactionData
@@ -68,33 +80,32 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
 
-    try {
-      // Now fetch all transactions
-      const transactions = await prisma.transaction.findMany({
-        orderBy: { createdAt: "desc" }
-      });
+    const [transactions, total] = await Promise.all([
+      prisma.transaction.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }),
+      prisma.transaction.count()
+    ]);
 
-      return NextResponse.json(transactions);
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return NextResponse.json(
-        { error: "Failed to fetch transactions", details: dbError },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json({
+      transactions,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
-    console.error("Error in GET /api/transactions:", error);
+    console.error('Error fetching transactions:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch transactions" },
       { status: 500 }
     );
   }
