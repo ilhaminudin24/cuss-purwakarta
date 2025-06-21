@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Icons from "lucide-react";
@@ -29,7 +29,7 @@ export default function AdminNavigation() {
   const [retryCount, setRetryCount] = useState(0);
   const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  const fetchMenuItems = async () => {
+  const fetchMenuItems = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -109,7 +109,7 @@ export default function AdminNavigation() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [retryCount, retryTimeout]);
 
   useEffect(() => {
     fetchMenuItems();
@@ -120,7 +120,7 @@ export default function AdminNavigation() {
         clearTimeout(retryTimeout);
       }
     };
-  }, [retryCount]); // Re-fetch when retryCount changes
+  }, [fetchMenuItems, retryTimeout]); // Re-fetch when retryCount changes (via fetchMenuItems)
 
   const handleLogout = async () => {
     if (retryTimeout) {
