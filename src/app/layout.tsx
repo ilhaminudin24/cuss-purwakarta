@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import HeaderWrapper from "./components/HeaderWrapper";
+import Footer from "./components/footer/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,12 +30,9 @@ export default function RootLayout({
           <HeaderWrapper />
           {/* Main Content */}
           <main className="min-h-[80vh] bg-white">{children}</main>
+          {/* Footer */}
+          <Footer />
         </Providers>
-
-        {/* Footer */}
-        <footer className="bg-black text-white text-center py-4 mt-8">
-          <span className="text-sm">&copy; {new Date().getFullYear()} CUSS Purwakarta. All rights reserved.</span>
-        </footer>
 
         {/* Floating WhatsApp CTA (mobile) */}
         <a

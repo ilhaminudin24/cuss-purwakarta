@@ -13,6 +13,7 @@
     "db:push": "prisma db push",
     "db:push:dev": "node scripts/prisma-dev.js db push",
     "db:seed:dev": "node scripts/seed-dev-database.js",
+    "db:seed:footer": "node scripts/seed-footer-data.js",
     "db:reset:dev": "node scripts/reset-dev-database.js",
     "db:setup:dev": "node scripts/setup-dev-database.js",
     "db:migrate:dev": "node scripts/migrate-to-dev.js",
@@ -24,7 +25,9 @@
     "check:env": "node scripts/check-env-files.js",
     "fix:env": "node scripts/fix-env-conflict.js",
     "setup:migration": "node scripts/setup-production-migration.js",
-    "push:prod": "node scripts/push-to-production.js"
+    "push:prod": "node scripts/push-to-production.js",
+    "add:footer-nav": "node scripts/add-footer-navigation.js",
+    "db:migrate-footer": "node scripts/migrate-footer-to-prod.js"
   },
   "eslintConfig": {
     "extends": [
