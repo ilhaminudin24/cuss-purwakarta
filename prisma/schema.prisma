@@ -92,30 +92,30 @@ model NavigationMenu {
 }
 
 model BookingFormField {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  label        String
-  name         String
-  type         String
-  required     Boolean   @default(false)
-  readonly     Boolean   @default(false)
-  position     Int
-  options      String[]
-  isActive     Boolean   @default(true)
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  label         String
+  name          String
+  type          String
+  required      Boolean  @default(false)
+  readonly      Boolean  @default(false)
+  position      Int
+  options       String[]
+  isActive      Boolean  @default(true)
   autoCalculate Json?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model ServiceConfig {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  serviceName     String   @unique
-  showPickup      Boolean  @default(true)
-  showDestination Boolean  @default(true)
-  showDirections  Boolean  @default(true)
-  firstStepFields String[] @default([])
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  serviceName      String   @unique
+  showPickup       Boolean  @default(true)
+  showDestination  Boolean  @default(true)
+  showDirections   Boolean  @default(true)
+  firstStepFields  String[] @default([])
   secondStepFields String[] @default([])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model BookingService {
@@ -129,21 +129,21 @@ model BookingService {
 
 /// @map("transactions")
 model Transaction {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  whatsapp     String?  // Made optional to handle existing null values
-  service      String
-  pickup       Json     // { lat: number, lng: number, address: string }
-  destination  Json     // { lat: number, lng: number, address: string }
-  distance     Float
-  subscription Boolean  @default(false)
-  notes        String?
-  status       String   @default("pending") // pending, completed, cancelled
-  dynamicFields Json?   // Store additional form fields
-  latitude     Float?   // GPS latitude coordinate
-  longitude    Float?   // GPS longitude coordinate
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  whatsapp      String? // Made optional to handle existing null values
+  service       String
+  pickup        Json // { lat: number, lng: number, address: string }
+  destination   Json // { lat: number, lng: number, address: string }
+  distance      Float
+  subscription  Boolean  @default(false)
+  notes         String?
+  status        String   @default("pending") // pending, completed, cancelled
+  dynamicFields Json? // Store additional form fields
+  latitude      Float? // GPS latitude coordinate
+  longitude     Float? // GPS longitude coordinate
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Page {
@@ -178,4 +178,69 @@ model HowToOrder {
   updatedAt DateTime @updatedAt
 
   @@index([position])
+}
+
+// Footer Management Models
+model FooterSection {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String?
+  position    Int          @default(0)
+  visible     Boolean      @default(true)
+  sectionType String // "company_info", "quick_links", "services", "contact", "social_media"
+  links       FooterLink[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([position])
+  @@index([sectionType])
+  @@index([visible])
+}
+
+model FooterLink {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  url         String
+  position    Int      @default(0)
+  visible     Boolean  @default(true)
+  isExternal  Boolean  @default(false)
+  sectionId   String   @db.ObjectId
+  section     FooterSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([position])
+  @@index([visible])
+}
+
+model SocialMedia {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  platform  String
+  url       String
+  icon      String
+  position  Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platform])
+  @@index([position])
+  @@index([visible])
+}
+
+model CompanyInfo {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  companyName String
+  description String?
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  logo        String?
+  copyright   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
 }
