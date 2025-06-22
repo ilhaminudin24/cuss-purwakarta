@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { CompanyInfo } from './Footer';
 
 interface CompanyInfoSectionProps {
@@ -11,11 +12,12 @@ export default function CompanyInfoSection({ companyInfo }: CompanyInfoSectionPr
       {/* Logo */}
       {companyInfo.logo && (
         <div className="transition-transform duration-300 hover:scale-105">
-          <img 
+          <Image
             src={companyInfo.logo} 
             alt={`${companyInfo.companyName} logo`}
-            className="h-12 w-auto object-contain"
-            loading="lazy"
+            width={150}
+            height={48}
+            className="w-auto object-contain"
           />
         </div>
       )}
